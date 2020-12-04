@@ -1,0 +1,56 @@
+NEW YORK STATE BOARD OF ELECTIONS
+
+RECORD LAYOUT FOR EFS DISCLOSURE TRANSACTIONS
+
+                        DELIMITED ASCII
+
+Note: Filer ID: 	A#####  = State Filers
+		C#####  = County Filers
+
+ FIELD                        LOCATION               TYPE        FORMAT                         EFS IMPORT
+
+
+ FILER_ID                       01                   CHAR                                       REQUIRED
+ FREPORT_ID                     02                   CHAR                                       REQUIRED
+ TRANSACTION_CODE               03                   CHAR                                       REQUIRED
+ E_YEAR                         04                   CHAR                                       REQUIRED
+ T3_TRID                        05                   INTEGER
+ DATE1_10                       06                   DATE        'MM/DD/YYYY'
+ DATE2_12                       07                   DATE        'MM/DD/YYYY'
+ CONTRIB_CODE_20                08                   CHAR
+ CONTRIB_TYPE_CODE_25           09                   CHAR
+ CORP_30                        10                   CHAR
+ FIRST_NAME_40                  11                   CHAR
+ MID_INIT_42                    12                   CHAR
+ LAST_NAME_44                   13                   CHAR
+ ADDR_1_50                      14                   CHAR
+ CITY_52                        15                   CHAR
+ STATE_54                       16                   CHAR
+ ZIP_56                         17                   CHAR
+ CHECK_NO_60                    18                   CHAR
+ CHECK_DATE_62                  19                   DATE        'MM/DD/YYYY'
+ AMOUNT_70                      20                   FLOAT
+ AMOUNT2_72                     21                   FLOAT
+ DESCRIPTION_80                 22                   CHAR
+ OTHER_RECPT_CODE_90            23                   CHAR
+ PURPOSE_CODE1_100              24                   CHAR
+ PURPOSE_CODE2_102              25                   CHAR
+ EXPLANATION_110                26                   CHAR
+ XFER_TYPE_120                  27                   CHAR
+ CHKBOX_130                     28                   CHAR
+ CREREC_UID                     29                   CHAR
+ CREREC_DATE                    30                   DATE        'MM/DD/YYYY HH24:MI:SS'
+
+(RecordSeparator): CR-LF
+(FieldSeparator): ,
+(FieldStartDelimiter): "
+(FieldEndDelimiter): "
+(FieldDelimitStyle): all
+(StripLeadingBlanks): True
+(StripTrailingBlanks): True
+
+
+
+
+
+                                                  11/19/99 11:30 am

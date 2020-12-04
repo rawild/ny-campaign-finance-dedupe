@@ -1,0 +1,33 @@
+               NEW YORK STATE BOARD OF ELECTIONS
+
+             RECORD LAYOUT FOR DISCLOSURE FILER RECORDS
+
+                        DELIMITED ASCII
+
+
+ FIELD                        LOCATION               TYPE
+
+ FILER_ID                       01                   CHAR
+ FILER_NAME                     02                   CHAR
+ FILER_TYPE                     03                   CHAR
+ STATUS                         04                   CHAR
+ COMMITTEE_TYPE                 05                   CHAR
+ OFFICE                         06                   INTEGER
+ DISTRICT                       07                   INTEGER
+ TREAS_FIRST_NAME               08                   CHAR
+ TREAS_LAST_NAME                09                   CHAR
+ ADDRESS                        10                   CHAR
+ CITY                           11                   CHAR
+ STATE                          12                   CHAR
+ ZIP                            13                   CHAR
+
+
+(RecordSeparator): CR-LF
+(FieldSeparator): ,
+(FieldStartDelimiter): "
+(FieldEndDelimiter): "
+(FieldDelimitStyle): all
+(StripLeadingBlanks): True
+(StripTrailingBlanks): True
+
+                                                  11/19/99 11:27 am

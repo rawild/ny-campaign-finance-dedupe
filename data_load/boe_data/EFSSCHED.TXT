@@ -1,0 +1,286 @@
+NEW YORK STATE Board of Elections Campaign Finance Disclosure Filing Codes
+
+
+                                SCHEDULES
+
+FIELD NAMES     A  B  C D  E  F  G  H  I  J K  L  M  N  O  P Q
+--------------------------------------------------------------
+DATE1_10        X  X  X X  X  X  X  X  X  X X  X  X  X     X X
+
+DATE2_12                                    X  X  X
+
+CONTRIB_CODE_2  X       X                               X  X
+0
+
+CONTRIB_TYPE_C          X
+ODE_25
+
+CORP_30         X  X  X X  X  X  X  X  X  X X  X  X  X  X  X X
+
+FIRST_NAME_40   X       X                                  X
+
+MID_INIT_42     X       X                                  X
+
+LAST_NAME_44    X       X                                  X
+
+ADDR_1_50       X  X  X X  X  X  X  X  X  X X  X  X  X     X X
+
+CITY_52         X  X  X X  X  X  X  X  X  X X  X  X  X     X X
+
+STATE_54        X  X  X X  X  X  X  X  X  X X  X  X  X     X X
+
+ZIP_56          X  X  X X  X  X  X  X  X  X X  X  X  X     X X
+
+CHECK_NO_60     X  X  X       X  X  X     X       X        X X
+
+CHECK_DATE_62                             X
+
+AMOUNT_70       X  X  X X  X  X  X  X  X  X X  X  X  X     X X
+
+AMOUNT2_72                                  X        X  X
+
+DESCRIPTION_80          X
+
+OTHER_RECPT_CO             X
+DE_90
+
+PURPOSE_CODE1_                X                      X  X
+100
+
+PURPOSE_CODE2_                                               X
+102
+
+EXPLANATION_11                X                      X  X    X
+0
+
+XFER_TYPE_120                    X  X
+
+CHKBOX_130                             X
+
+A -  Monetary Contributions/Individual & Partnerships
+B -  Monetary Contributions/Corporate
+C -  Monetary Contributions/All Other
+D -  In-Kind Contributions
+E -  Other Receipts
+F -  Expenditure/Payments
+G -  Transfers In
+H -  Transfers Out
+I -  Loans Received
+J -  Loan Repayments
+K -  Liabilities/Loans Forgiven
+L -  Expenditure Refunds
+M -  Contributions Refunded
+N -  Outstanding Liabilities
+O -  Partners / Subcontracts
+P -  Non Campaign Housekeeping Receipts
+Q -  Non Campaign Housekeeping Expenses
+X -  A No Activity Statement Was Submitted
+Y -  A In-Lieu-Of Statement Was Submitted
+
+
+
+
+
+
+DATA ELEMENT INVENTORY for table EFS_Transactions_T3:
+
+Note: Filer ID: 	A#####  = State Filers
+		C#####  = County Filers
+
+Date Element  Data       Len  Sta  End   Table                 Schedule  Description
+Name          Type            rt   Pos                         (s)
+                              Pos
+---------------------------------------------------------------------------------------------------
+  FILER_ID     Char(6)    6    1     6   EFS_TRANSACTIONS_T3   KEY-1     Filer Id Number
+---------------------------------------------------------------------------------------------------
+ FREPORT_ID    Char(5)    1    7     7   EFS_TRANSACTIONS_T3   KEY-2     Report ID1
+---------------------------------------------------------------------------------------------------
+  TRANSAC     Varchar2    1    8     8   EFS_TRANSACTIONS_T3   KEY-3     Transaction Code2
+ TION_CODE       (1)
+---------------------------------------------------------------------------------------------------
+   E_YEAR     Varchar2    4    9    12   EFS_TRANSACTIONS_T3   KEY-4     Election Year
+                 (4)
+---------------------------------------------------------------------------------------------------
+  T3_TRID     Number(3   10   13    22   EFS_TRANSACTIONS_T3   KEY-5     Transaction ID
+                 8)
+---------------------------------------------------------------------------------------------------
+  DATE1_10      Date     10   23    32   EFS_TRANSACTIONS_T3   A-N, P,   Date of Schedule
+                                                               Q         Transaction
+---------------------------------------------------------------------------------------------------
+  DATE2_12      Date     10   33    42   EFS_TRANSACTIONS_T3   K, L, M   Original Date of
+                                                                         Liability, Payment
+                                                                         Date or Date Received
+---------------------------------------------------------------------------------------------------
+  CONTRIB_    Varchar2    4   43    46   EFS_TRANSACTIONS_T3   A, D, O,  Contributor Code3
+  CODE_20        (4)                                           P
+---------------------------------------------------------------------------------------------------
+  CONTRIB_    Varchar2    1   47    47   EFS_TRANSACTIONS_T3   D         Contribution Type Code4
+   TYPE_         (1)
+  CODE_25
+---------------------------------------------------------------------------------------------------
+  CORP_30     Varchar2   50   48    97   EFS_TRANSACTIONS_T3   C-E, G-Q  Corporation Name
+                (40)
+---------------------------------------------------------------------------------------------------
+   FIRST_     Varchar2   10   98    107  EFS_TRANSACTIONS_T3   A         First Name of
+  NAME_40       (10)                                                     Contributor
+---------------------------------------------------------------------------------------------------
+MID_INIT_42   Varchar2    1   108   108  EFS_TRANSACTIONS_T3   A         Middle Initial of
+                 (1)                                                     Contributor
+---------------------------------------------------------------------------------------------------
+LAST_NAME_44  Varchar2   15   109   123  EFS_TRANSACTIONS_T3   A         Last Name of Contributor
+                (15)
+---------------------------------------------------------------------------------------------------
+ ADDR_1_50    Varchar2   40   124   163  EFS_TRANSACTIONS_T3   A-N, P,   Mailing Address
+                (40)                                           Q         (Contributor)
+---------------------------------------------------------------------------------------------------
+  CITY_52     Varchar2   15   164   178  EFS_TRANSACTIONS_T3   A-N, P,   Mailing Address City
+                (15)                                           Q         (Contributor)
+---------------------------------------------------------------------------------------------------
+  STATE_54    Varchar2    2   179   180  EFS_TRANSACTIONS_T3   A-N, P,   Mailing Address State
+                 (2)                                           Q         (Contributor)
+---------------------------------------------------------------------------------------------------
+   ZIP_56     Varchar2    5   181   185  EFS_TRANSACTIONS_T3   A-N, P,   Mailing Address Zip
+                 (5)                                           Q         (Contributor)
+---------------------------------------------------------------------------------------------------
+CHECK_NO_60   Varchar2   10   186   195  EFS_TRANSACTIONS_T3   A-C, F-   Check Number
+                (10)                                           H, J
+                                                               M, P, Q
+---------------------------------------------------------------------------------------------------
+ CHECK_DATE     Date     10   196   205  EFS_TRANSACTIONS_T3   J         Check Date
+    _62
+---------------------------------------------------------------------------------------------------
+ AMOUNT_70    Number(9    9   206   215  EFS_TRANSACTIONS_T3   A-N, P,   Amount on Schedule(s)
+                 ,0)                                           Q
+---------------------------------------------------------------------------------------------------
+ AMOUNT2_72   Number(9    9   216   225  EFS_TRANSACTIONS_T3   K, N, O   Amount Forgiven,
+                  )                                                      Outstanding,
+                                                                         Attributed.
+---------------------------------------------------------------------------------------------------
+DESCRIPTION   Varchar2   36   226   261  EFS_TRANSACTIONS_T3   D         Description
+    _80         (36)
+---------------------------------------------------------------------------------------------------
+OTHER_RECPT_  Varchar2   24   262   285  EFS_TRANSACTIONS_T3   E         Other Receipt Code5
+  CODE_90       (24)
+---------------------------------------------------------------------------------------------------
+  PURPOSE_    Varchar2    5   286   290  EFS_TRANSACTIONS_T3   F, N, O   Expenditure Purpose
+ CODE1_100       (5)                                                     Codes6
+
+---------------------------------------------------------------------------------------------------
+  PURPOSE_    Varchar2    5   291   295  EFS_TRANSACTIONS_T3   Q         Expenditure Purpose
+ CODE2_102       (5)                                                     Codes 7
+                                                                         For Schedule Q only
+---------------------------------------------------------------------------------------------------
+EXPLANATION_  Varchar2   36   296   331  EFS_TRANSACTIONS_T3   F, N, O,  Explanation
+    110         (36)                                           Q
+---------------------------------------------------------------------------------------------------
+XFER_TYPE_12  Varchar2    1   332   332  EFS_TRANSACTIONS_T3   G, H      Transfer type8
+     0           (1)
+---------------------------------------------------------------------------------------------------
+ CHKBOX_130   Varchar2    1   333   333  EFS_TRANSACTIONS_T3   I         Bank Loan Check Box9
+                 (1)
+---------------------------------------------------------------------------------------------------
+ CREREC_UID   Varchar2    8   334   341  EFS_TRANSACTIONS_T3             User ID of User who
+                 (8)                                                     created Rec
+---------------------------------------------------------------------------------------------------
+CREREC_DATE     Date     19   342   360  EFS_TRANSACTIONS_T3   KEY-6     Date Record was created
+---------------------------------------------------------------------------------------------------
+
+
+
+
+
+_______________________________
+
+
+     1.   FReport ID (Report ID):
+          A  32 DAY Pre Primary   G  32 Day Pre Special
+          B  11 Day Pre Primary   H  11 Day Pre Special
+          C  10 Day Post Primary  I  27 Day Post Special
+          D  32 Day Pre General   J  Periodic Jan. 15, 19__
+          E  11 Day Pre General   K  Periodic July 15, 19__
+          F  27 Day Post General  L  24 hour Notice
+
+     2.  Transaction Code (Scedule):
+          A -  Monetary Contributions/Individual & Partnerships
+          B -  Monetary Contributions/Corporate
+          C -  Monetary Contributions/All Other
+          D -  In-Kind Contributions
+          E -  Other Receipts
+          F -  Expenditure/Payments
+          G -  Transfers In
+          H -  Transfers Out
+          I -  Loans Received
+          J -  Loan Repayments
+          K -  Liabilities/Loans Forgiven
+          L -  Expenditure Refunds
+          M -  Contributions Refunded
+          N -  Outstanding Liabilities
+          O -  Partners / Subcontracts
+          P -  Non Campaign Housekeeping Receipts
+          Q -  Non Campaign Housekeeping Expenses
+	  X -  A No Activity Statement Was Submitted
+	  Y -  A In-Lieu-Of Statement Was Submitted
+
+     3.  Contrib_Code_20 (Contributor Code):
+          CAN    - Candidate/Candidate Spouse
+          FAM    - Family Members
+          CORP   - Corporate
+          IND    - Individual
+          PART   - Partnership
+          COM    - Committee
+
+     4.  Contrib_Type_Code_25 (Contribution Type Code):
+          1 = Services/Facilities Provided
+          2 = Property Given
+          3 = Campaign Expenses Paid
+
+     5.  Other_Recpt_Code_90: (Other receipt Codes):
+          INT/DIV    Interest/Dividend
+          PROC       Proceeds Sale/Lease
+          OTH        Other
+
+     6.  Purpose_Code1_100: (Expenditure Purpose Codes):
+          CMAIL                         Campaign Mailings
+          CONSL                         Campaign Consultant
+          POSTA                         Postage
+          CONSV                         Constituent Services
+          CNTRB                         Political Contributions
+          PROFL                         Professional Services
+          FUNDR                         Fundraising
+          RADIO                         Radio Ads
+          LITER                         Campaign Literature
+          OFFCE                         Office Expenses
+          OTHER                         Other: Must Provide Explanation
+          VOTER                         Voter Registration Materials or Services
+          PETIT                         Petition Expenses
+          WAGES                         Campaign Workers Salaries
+          INT                           Interest Expense
+          RENTO                         Office Rent
+          TVADS                         Television Ads
+          POLLS                         Polling Costs
+          PRINT                         Print Ads
+
+
+     7.  Purpose_Code2_102:   (Expenditure Purpose Codes for Schedule Q only):
+          RENTO    Office Rent
+          UTILS    Utilities
+          PAYRL    Payroll
+          POSTA    Postage
+          PROFL    Professional Services
+          OFEXP    Office Expenses
+          MAILS    Mailings
+          OTHER    Other: Provide Explanation
+          VOTER    Voter Registration Materials or Services
+
+     8.  Xfer_Type_120 (Transfer Type):
+          Type 1 - Party/Constituted Committees
+          Type 2 - Committee Solely Supporting Same Candidate
+
+     9.  Chkbox_130 (Bank Loan Check Box):
+          B - If Bank Loan
+          O - If Other
+
+     10.  Filer_Type:
+          C - Committee
+          R - Candidate
+                                                                         11/19/99 02:49 pm
