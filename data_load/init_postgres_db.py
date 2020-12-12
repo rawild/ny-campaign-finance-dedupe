@@ -202,7 +202,7 @@ def processFiles(recipients_file, contributions_file):
             " LOWER(zip) AS zip, "
             " LOWER(state) AS state, "
             " LOWER(street) AS street, " 
-            " CAST((corp IS NULL) AS INTEGER) AS person "
+            " CAST((first_name IS NOT NULL) AS INTEGER) AS person "
             " FROM donors)")
     c.execute("CREATE INDEX processed_donor_idx ON processed_donors (donor_id)")
     conn.commit()

@@ -71,7 +71,7 @@ class Matching(object):
         self._fingerprinter: Optional[blocking.Fingerprinter] = None
         self.data_model: datamodel.DataModel
         self.classifier: Classifier
-        self.predicates: List[dedupe.predicates.Predicate]
+        self.predicates: Sequence[dedupe.predicates.Predicate]
 
     @property
     def fingerprinter(self) -> blocking.Fingerprinter:
@@ -939,9 +939,7 @@ class StaticMatching(Matching):
                 "Something has gone wrong with loading the settings file. "
                 "Try deleting the file")
 
-        logger.info('Predicate set:')
-        for predicate in self.predicates:
-            logger.info(predicate)
+        logger.info(self.predicates)
 
         self._fingerprinter = blocking.Fingerprinter(self.predicates)
 
@@ -1018,7 +1016,7 @@ class ActiveMatching(Matching):
                 raise
 
     def train(self,
-              recall: float = 1.00,
+              recall: float = 0.95,
               index_predicates: bool = True) -> None:  # pragma: no cover
         """
         Learn final pairwise classifier and fingerprinting rules. Requires that
@@ -1039,8 +1037,7 @@ class ActiveMatching(Matching):
                               and take substantial memory.
 
         """
-        assert self.active_learner is not None, \
-               "Please initialize with the sample method"
+        assert self.active_learner, "Please initialize with the sample method"
 
         examples, y = flatten_training(self.training_pairs)
         self.classifier.fit(self.data_model.distances(examples), y)
@@ -1087,6 +1084,26 @@ class ActiveMatching(Matching):
         pickle.dump(self.classifier, file_obj)
         pickle.dump(self.predicates, file_obj)
 
+    def _writeIndices(self, file_obj: BinaryIO) -> None:
+        indices = {}
+        doc_to_ids = {}
+        canopies = {}
+        for full_predicate in self.predicates:
+            for predicate in full_predicate:
+                if hasattr(predicate, 'index') and predicate.index:  # type: ignore
+                    doc_to_ids[predicate] = dict(predicate.index._doc_to_id)  # type: ignore
+                    if hasattr(predicate, "canopy"):
+                        canopies[predicate] = predicate.canopy  # type: ignore
+                    else:
+                        try:
+                            indices[predicate] = predicate.index._index  # type: ignore
+                        except AttributeError:
+                            pass
+
+        pickle.dump(canopies, file_obj)
+        pickle.dump(indices, file_obj)
+        pickle.dump(doc_to_ids, file_obj)
+
     def uncertain_pairs(self) -> List[TrainingExample]:
         '''
         Returns a list of pairs of records from the sample of record pairs
@@ -1102,8 +1119,7 @@ class ActiveMatching(Matching):
           [({'name' : 'Georgie Porgie'}, {'name' : 'Georgette Porgette'})]
 
         '''
-        assert self.active_learner is not None, \
-               "Please initialize with the sample method"
+        assert self.active_learner, "Please initialize with the sample method"
         return [self.active_learner.pop()]
 
     def mark_pairs(self, labeled_pairs: TrainingData) -> None:

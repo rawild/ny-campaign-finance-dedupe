@@ -3,7 +3,7 @@
 
 """
 
-__Note:__ You will need to run `python init_postgres_db.py [filings_file] [filer_file]`
+__Note:__ You will need to run `python init_postgres_db.py [filer_file] [filings_file] `
 before running this script.
 
 Runs a matching run against the initiated DB
@@ -114,7 +114,7 @@ def cluster_ids(clustered_dupes):
 
 def run_dedupe(settings_file, training_file, type):
     start_time = time.time()
-
+    
     # Set the database connection from environment variable using
     # [dj_database_url](https://github.com/kennethreitz/dj-database-url)
     # For example:
@@ -158,10 +158,10 @@ def run_dedupe(settings_file, training_file, type):
         # The street, city, and zip fields are often missing, so we'll
         # tell dedupe that, and we'll learn a model that take that into
         # account
-        fields = [{'field': 'name', 'type': 'String'},
+        fields = [{'field': 'name', 'type': 'Name'},
                   {'field': 'street', 'type': 'String',
                    'has missing': True},
-                  {'field': 'city', 'type': 'ShortString', 'has missing': True},
+                  {'field': 'city', 'type': 'Address', 'has missing': True},
                   {'field': 'state', 'type': 'ShortString', 'has missing': True},
                   {'field': 'zip', 'type': 'ShortString', 'has missing': True},
                   ]
@@ -330,8 +330,8 @@ def run_dedupe(settings_file, training_file, type):
     locale.setlocale(locale.LC_ALL, '')  # for pretty printing numbers
 
     # save entity map
-    entity_map_filename = 'entity_map_' + settings_file.split('/')[-1] + '.csv'
-    donors_filename = 'processed_donors_' + settings_file.split('/')[-1] + '.csv'
+    entity_map_filename = 'entity_map_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
+    donors_filename = 'processed_donors_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
     with read_con.cursor() as cur:
         with open(entity_map_filename, 'w') as file_out:
             cur.copy_expert('COPY entity_map TO STDOUT WITH CSV HEADER', file_out)
@@ -480,8 +480,6 @@ def run_dedupe(settings_file, training_file, type):
 '''
 
 if __name__ == '__main__':
-   
-    
     parser = argparse.ArgumentParser(prog='run campaign finance dedupe')
     parser.add_argument('--settings_file', '-s', help='file to load previously generated setting from')
     parser.add_argument('--verbose', '-v', action='count',
@@ -508,5 +506,6 @@ if __name__ == '__main__':
         settings_file = 'settings_'+ type + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime())
     training_file = 'training_'+ type + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime())+'.json' 
 
+    
     # ## Run
     run_dedupe(settings_file, training_file, type)
