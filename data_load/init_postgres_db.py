@@ -54,7 +54,7 @@ def processFiles(recipients_file, contributions_file):
     c.execute("DROP TABLE IF EXISTS recipients")
     c.execute("DROP TABLE IF EXISTS contributions")
     c.execute("DROP TABLE IF EXISTS processed_donors")
-    #c.execute("DROP TABLE IF EXISTS match_runs")
+   
     c.execute("CREATE TABLE raw_table "
             "(filer_id VARCHAR(6), freport_id VARCHAR(1), transaction_code VARCHAR(1), "
             " e_year VARCHAR(4), t3_trid VARCHAR(10), date1 VARCHAR(10), "
@@ -206,14 +206,6 @@ def processFiles(recipients_file, contributions_file):
             " FROM donors)")
     c.execute("CREATE INDEX processed_donor_idx ON processed_donors (donor_id)")
     conn.commit()
-
-    '''print('creating match_runs table...')
-    c.execute("CREATE TABLE match_runs "
-            "(run_id SERIAL PRIMARY KEY, completed TIMESTAMP, "
-            " predicates VARCHAR(1000), total_clusters INT, "
-            " avg_cluster_size FLOAT, biggest_cluster_size INT, biggest_cluster VARCHAR(100), "
-            " total_donors INT, donor_type VARCHAR(5), total_run_time FLOAT)")
-    conn.commit()'''
 
     c.close()
     conn.close()
