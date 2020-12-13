@@ -58,6 +58,7 @@ def reconnect_record_pairs(start):
                                 user=db_conf['USER'],
                                 password=db_conf['PASSWORD'],
                                 host=db_conf['HOST'],
+                                port=db_conf['PORT'],
                                 cursor_factory=psycopg2.extras.RealDictCursor)
     with read_con.cursor('pairs', cursor_factory=psycopg2.extensions.cursor) as read_cur:
         read_cur.execute("""
@@ -131,12 +132,14 @@ def run_dedupe(settings_file, training_file, type):
                                 user=db_conf['USER'],
                                 password=db_conf['PASSWORD'],
                                 host=db_conf['HOST'],
+                                port=db_conf['PORT'],
                                 cursor_factory=psycopg2.extras.RealDictCursor)
 
     write_con = psycopg2.connect(database=db_conf['NAME'],
                                  user=db_conf['USER'],
                                  password=db_conf['PASSWORD'],
-                                 host=db_conf['HOST'])
+                                 host=db_conf['HOST'],
+                                 port=db_conf['PORT'])
 
     # We'll be using variations on this following select statement to pull
     # in campaign donor info.

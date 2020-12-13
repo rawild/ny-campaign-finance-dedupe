@@ -32,6 +32,7 @@ def get_counts(word_list):
                                 user=db_conf['USER'],
                                 password=db_conf['PASSWORD'],
                                 host=db_conf['HOST'],
+                                port=db_conf['PORT'],
                                 cursor_factory=psycopg2.extras.RealDictCursor)
     results = []
     with read_con.cursor() as cur:
