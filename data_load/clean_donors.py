@@ -76,7 +76,8 @@ def address_cleaning():
     write_con = psycopg2.connect(database=db_conf['NAME'],
                                  user=db_conf['USER'],
                                  password=db_conf['PASSWORD'],
-                                 host=db_conf['HOST'])
+                                 host=db_conf['HOST'],
+                                 port=db_conf['PORT'],)
     remove_periods(write_con)
     with write_con.cursor() as cur:
         for group in address_words:
