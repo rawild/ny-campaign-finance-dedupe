@@ -24,7 +24,7 @@ def create_match_runs():
             "(run_id SERIAL PRIMARY KEY, completed TIMESTAMP, "
             " predicates VARCHAR(1000), total_clusters INT, "
             " avg_cluster_size FLOAT, biggest_cluster_size INT, biggest_cluster VARCHAR(100), "
-            " total_donors INT, donor_type VARCHAR(5), total_run_time FLOAT, donor_cluster_ration INT, settings_file VARCHAR(500))")
+            " total_donors INT, donor_type VARCHAR(5), total_run_time FLOAT, donor_cluster_ratio INT, settings_file VARCHAR(500))")
 
 
     conn.commit()
