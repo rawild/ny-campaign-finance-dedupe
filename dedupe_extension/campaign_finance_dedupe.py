@@ -330,7 +330,7 @@ def run_dedupe(settings_file, training_file, type):
     #
     # For example, let's see who the top 10 donors are.
 
-    locale.setlocale(locale.LC_ALL, '')  # for pretty printing numbers
+    locale.setlocale(locale.LC_ALL,'en_US.UTF-8')  # for pretty printing numbers
 
     # save entity map
     entity_map_filename = 'entity_map_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
