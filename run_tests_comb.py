@@ -33,9 +33,9 @@ if __name__ == '__main__':
         processFiles(filers_filename, filings_filename)
         address_cleaning()
         if type == 'CORP':
-            settings_filename = 'dedupe_extension/settings/settings_'+str(n)
+            settings_filename = 'dedupe_extension/settings/settings_1'
         else:
-            settings_filename = 'dedupe_extension/settings/settings_IND_'+str(n)+'_comb'
+            settings_filename = 'dedupe_extension/settings/settings_IND_1_comb'
         print(f'using {settings_filename}...')
         training_file = 'training_'+time.strftime('%d_%m_%y_%H%M', time.localtime())+'.json' 
         run_dedupe(settings_filename,training_file,type)
