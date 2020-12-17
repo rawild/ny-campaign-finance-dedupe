@@ -131,3 +131,4 @@ dmypy.json
 # Big data
 data_load/ALL_REPORTS_fixed.txt
 data_load/boe_data/ALL_REPORTS.txt
+data_load/boe_data/ALL_REPORTS_fixed.txt

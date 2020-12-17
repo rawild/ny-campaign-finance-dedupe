@@ -18,6 +18,7 @@ import io
 import csv
 import argparse
 
+
 import dj_database_url
 import psycopg2
 import psycopg2.extras
