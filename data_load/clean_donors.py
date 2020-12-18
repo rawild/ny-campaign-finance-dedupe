@@ -85,7 +85,7 @@ def address_cleaning():
                 if (i) > 0:
                     cur.execute("UPDATE processed_donors "
                     "SET street = REPLACE(street, '"+ word +"', '"+ group[0] +"') "
-                    "WHERE (street like '%"+ word +" %' or street like '%"+ word +"')")
+                    "WHERE (street like '%"+ word +" %' or street like '%"+ word +"') AND street not like '%"+group[0]+"%'")
 
     write_con.commit()    
     name_cleaning(write_con)
@@ -106,7 +106,7 @@ def name_cleaning(write_con):
             for i, value in enumerate(set):
                 if i > 0:
                     cur.execute("UPDATE processed_donors "
-                            "SET name = REPLACE(name, '"+value+"','"+set[0]+"') "
+                            "SET name = REPLACE(name, '"+value+"',' "+set[0]+" ') "
                             "WHERE name like '%"+value+"%' and person != 1")
     write_con.commit()
                 
