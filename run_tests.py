@@ -24,10 +24,10 @@ if __name__ == '__main__':
         print('get samples..')
         #train_proportion = 1 - round[0]
         #filers = get_filers('../commcand', train_proportion, round[1])
-        filers_filename = '../../sample_filers_'+str(i)+'.csv'
+        filers_filename = '../sample_filers_'+str(i)+'.csv'
         #filers.to_csv(filers_filename, index=False)
         #filings = get_filings('data_load', train_proportion, round[1])
-        filings_filename = '../../sample_filings_'+str(i)+'.csv'
+        filings_filename = '../sample_filings_'+str(i)+'.csv'
         #filings.to_csv(filings_filename, index=False)
         print('load into db')
         processFiles(filers_filename, filings_filename)
