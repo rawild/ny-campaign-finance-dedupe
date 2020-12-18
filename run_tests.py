@@ -32,7 +32,7 @@ if __name__ == '__main__':
         print('load into db')
         processFiles(filers_filename, filings_filename)
         address_cleaning()
-        for n in range(5):
+        for n in range(6):
             if type == 'CORP':
                 settings_filename = 'dedupe_extension/settings_CORP_ext_'+str(n)
             else:
