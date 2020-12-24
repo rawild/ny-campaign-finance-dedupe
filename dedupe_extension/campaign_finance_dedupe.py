@@ -23,7 +23,7 @@ import dj_database_url
 import psycopg2
 import psycopg2.extras
 
-from dedupe import dedupe
+import dedupe
 import numpy
 
 

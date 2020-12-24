@@ -27,10 +27,10 @@ if __name__ == '__main__':
         filers_filename = '../sample_filers_'+str(n)+'.csv'
         #filers.to_csv(filers_filename, index=False)
         #filings = get_filings('data_load', train_proportion, round[1])
-        filings_filename = '../sample_filings_'+str()+'.csv'
+        filings_filename = '../sample_filings_'+str(n)+'.csv'
         #filings.to_csv(filings_filename, index=False)
         #print('load into db')
-        #processFiles(filers_filename, filings_filename)
+        processFiles(filers_filename, filings_filename)
         #address_cleaning()
         if type == 'CORP':
             settings_filename = 'dedupe_extension/settings/settings_CORP_ext_1'
