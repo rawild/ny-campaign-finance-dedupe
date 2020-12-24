@@ -23,7 +23,7 @@ import dj_database_url
 import psycopg2
 import psycopg2.extras
 
-import dedupe
+from dedupe import dedupe
 import numpy
 
 
@@ -116,7 +116,7 @@ def cluster_ids(clustered_dupes):
 
 def run_dedupe(settings_file, training_file, type):
     start_time = time.time()
-    
+    print("dedupe file ",dedupe.__file__)
     # Set the database connection from environment variable using
     # [dj_database_url](https://github.com/kennethreitz/dj-database-url)
     # For example:

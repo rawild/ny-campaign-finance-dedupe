@@ -67,7 +67,7 @@ class Matching(object):
             self.num_cores = multiprocessing.cpu_count()
         else:
             self.num_cores = num_cores
-
+    
         self._fingerprinter: Optional[blocking.Fingerprinter] = None
         self.data_model: datamodel.DataModel
         self.classifier: Classifier
@@ -926,6 +926,7 @@ class StaticMatching(Matching):
         super().__init__(num_cores, **kwargs)
 
         try:
+            logger.info('in local static')
             self.data_model = pickle.load(settings_file)
             self.classifier = pickle.load(settings_file)
             self.predicates = pickle.load(settings_file)
@@ -938,7 +939,7 @@ class StaticMatching(Matching):
             raise SettingsFileLoadingException(
                 "Something has gone wrong with loading the settings file. "
                 "Try deleting the file")
-
+        logger.info('in local static preds')
         logger.info(self.predicates)
 
         self._fingerprinter = blocking.Fingerprinter(self.predicates)
@@ -1196,7 +1197,7 @@ class StaticDedupe(StaticMatching, DedupeMatching):
     load the saved settings with StaticDedupe.
 
     """
-
+    
 
 class Dedupe(ActiveMatching, DedupeMatching):
     """
