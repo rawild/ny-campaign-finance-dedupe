@@ -86,8 +86,10 @@ def reconnect_record_pairs(start):
 
 # yeilds record pairs from a given cursor result
 def record_pairs(result_set, start=0):
+    cursor = start
     try:
         for i, row in enumerate(result_set):
+            cursor = i
             if i >=start:
                 a_record_id, a_record, b_record_id, b_record = row
                 record_a = (a_record_id, a_record)
@@ -98,7 +100,7 @@ def record_pairs(result_set, start=0):
                 if i % 10000 == 0:
                     print(i)
     except:
-        reconnect_record_pairs(i)
+        reconnect_record_pairs(cursor)
 
 def cluster_ids(clustered_dupes):
 
