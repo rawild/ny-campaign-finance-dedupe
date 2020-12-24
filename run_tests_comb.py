@@ -19,21 +19,21 @@ if __name__ == '__main__':
         type = 'CORP'
     round_data = [[.02,3],[.04,5],[.06,7],[.08,13],[.1,17]]
     #round_data = [[.02,3]]
-    for n in [3,4]: 
+    for n in [0,1,2,3,4]: 
         #print(f'starting round {i} at {time.strftime("%H:%M",time.localtime())}...')
         #print('get samples..')
         #train_proportion = 1 - round[0]
         #filers = get_filers('../commcand', train_proportion, round[1])
-        #filers_filename = '../sample_filers_'+str(i)+'.csv'
+        filers_filename = '../sample_filers_'+str(n)+'.csv'
         #filers.to_csv(filers_filename, index=False)
         #filings = get_filings('data_load', train_proportion, round[1])
-        #filings_filename = '../sample_filings_'+str(i)+'.csv'
+        filings_filename = '../sample_filings_'+str()+'.csv'
         #filings.to_csv(filings_filename, index=False)
         #print('load into db')
         #processFiles(filers_filename, filings_filename)
         #address_cleaning()
         if type == 'CORP':
-            settings_filename = 'dedupe_extension/settings/settings_CORP_ext_'+str(n)
+            settings_filename = 'dedupe_extension/settings/settings_CORP_ext_1'
         else:
             settings_filename = 'dedupe_extension/settings/settings_IND_1_comb'
         print(f'using {settings_filename}...')
