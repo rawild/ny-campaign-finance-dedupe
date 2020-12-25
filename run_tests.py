@@ -34,7 +34,7 @@ if __name__ == '__main__':
         address_cleaning()
         for n in range(5):
             if type == 'CORP':
-                settings_filename = 'dedupe_extension/settings_CORP_ext_'+str(n)
+                settings_filename = 'dedupe_extension/settings/settings_CORP_ext_'+str(n)
             else:
                 settings_filename = 'dedupe_extension/settings/settings_IND_ext_'+str(n)
             print(f'using {settings_filename}...')
