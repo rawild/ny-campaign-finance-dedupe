@@ -949,7 +949,7 @@ class ActiveMatching(Matching):
     """
     Class for training a matcher.
     """
-    classifier = rlr.RegularizedLogisticRegression()
+    classifier = rlr.RegularizedLogisticRegression(alpha=0.1)
 
     def __init__(self,
                  variable_definition: Sequence[Mapping],

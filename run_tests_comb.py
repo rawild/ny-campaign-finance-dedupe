@@ -31,7 +31,7 @@ if __name__ == '__main__':
         #filings.to_csv(filings_filename, index=False)
         #print('load into db')
         processFiles(filers_filename, filings_filename)
-        #address_cleaning()
+        address_cleaning()
         if type == 'CORP':
             settings_filename = 'dedupe_extension/settings/settings_CORP_ext_1'
         else:

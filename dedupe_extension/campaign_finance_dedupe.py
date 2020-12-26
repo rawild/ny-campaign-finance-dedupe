@@ -148,10 +148,10 @@ def run_dedupe(settings_file, training_file, type):
     # in campaign donor info.
     if type == 'IND':
         DONOR_SELECT = "SELECT donor_id, city, name, zip, state, street " \
-                   "from processed_donors where person = 1"
+                   "from processed_donors where person = 1 and name not like '%unitem%' "
     else:
         DONOR_SELECT = "SELECT donor_id, city, name, zip, state, street " \
-                   "from processed_donors where person != 1"
+                   "from processed_donors where person != 1 and name not like '%unitem%' "
 
     # ## Training
     if os.path.exists(settings_file):
@@ -336,8 +336,8 @@ def run_dedupe(settings_file, training_file, type):
     locale.setlocale(locale.LC_ALL,'en_US.UTF-8')  # for pretty printing numbers
 
     # save entity map
-    entity_map_filename = 'entity_map_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
-    donors_filename = 'processed_donors_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
+    entity_map_filename = '../clusters_for_review/entity_map_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
+    donors_filename = '../clusters_for_review/processed_donors_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
     with read_con.cursor() as cur:
         with open(entity_map_filename, 'w') as file_out:
             cur.copy_expert('COPY entity_map TO STDOUT WITH CSV HEADER', file_out)
