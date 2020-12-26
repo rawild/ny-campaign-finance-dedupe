@@ -157,7 +157,7 @@ def run_dedupe(settings_file, training_file, type):
     if os.path.exists(settings_file):
         print('reading from ', settings_file)
         with open(settings_file, 'rb') as sf:
-            deduper = dedupe.StaticDedupe(sf, num_cores=7)
+            deduper = dedupe.StaticDedupe(sf, num_cores=1)
     else:
         # Define the fields dedupe will pay attention to
         #
@@ -173,7 +173,7 @@ def run_dedupe(settings_file, training_file, type):
                   ]
 
         # Create a new deduper object and pass our data model to it.
-        deduper = dedupe.Dedupe(fields, num_cores=7)
+        deduper = dedupe.Dedupe(fields, num_cores=1)
 
         # Named cursor runs server side with psycopg2
         with read_con.cursor('donor_select') as cur:
