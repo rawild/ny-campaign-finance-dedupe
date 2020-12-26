@@ -96,7 +96,7 @@ def remove_periods(write_con):
     with write_con.cursor() as cur:
         for field in fields:
             cur.execute("UPDATE processed_donors "
-                            "SET "+ field +"= REPLACE("+ field +", '.', '') ")
+                            "SET "+ field +"= REPLACE("+ field +", '.', '') WHERE street != '.' ")
     write_con.commit()
 
 def name_cleaning(write_con):
