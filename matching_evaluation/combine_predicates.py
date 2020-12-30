@@ -13,7 +13,7 @@ def combine_predicates(predicates_1, predicates_2, indexes):
     predicates_1_ls = list(predicates_1)
     predicates_2_ls = list(predicates_2)
     for index in indexes:
-        predicates_1_ls.append(predicates_2_ls[index])
+        predicates_1_ls.append(predicates_2_ls[int(index)])
     return predicates_1_ls
 
 def build_combined_settings(first_settings,second_settings, indexes):
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('second_settings', help='second settings file')
     parser.add_argument('indexes', help='an array of the indexes of the predicate tuples you want to add')
     args = parser.parse_args()
-
-    build_combined_settings(args.first_settings, args.second_settings, args.indexes)
+    indexes_arr = args.indexes.split(',')
+    build_combined_settings(args.first_settings, args.second_settings, indexes_arr)
    
     print('Finished')
