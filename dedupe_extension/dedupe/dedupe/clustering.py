@@ -195,7 +195,7 @@ def condensedDistance(dupes: numpy.ndarray) -> Tuple[Dict[int, RecordID],
 
 def cluster(dupes: numpy.ndarray,
             threshold: float = .5,
-            max_components: int = 30000) -> Clusters:
+            max_components: int = 40000) -> Clusters:
     '''
     Takes in a list of duplicate pairs and clusters them in to a
     list records that all refer to the same entity based on a given
