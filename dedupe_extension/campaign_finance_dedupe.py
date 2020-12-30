@@ -164,8 +164,8 @@ def run_dedupe(settings_file, training_file, type):
         # The street, city, and zip fields are often missing, so we'll
         # tell dedupe that, and we'll learn a model that take that into
         # account
-        fields = [{'field': 'name', 'type': 'Name'},
-                  {'field': 'street', 'type': 'Address',
+        fields = [{'field': 'name', 'type': 'String'},
+                  {'field': 'street', 'type': 'String',
                    'has missing': True},
                   {'field': 'city', 'type': 'String', 'has missing': True},
                   {'field': 'state', 'type': 'ShortString', 'has missing': True},
