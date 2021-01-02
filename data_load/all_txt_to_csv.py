@@ -15,6 +15,8 @@ def get_filers(filers_dir):
     filers_columns_list=list(filers_columns_names.values)
     filers_df = pd.read_csv(filers_dir + "/COMMCAND.txt", header=None, names=filers_columns_list, encoding="unicode_escape")
     filers_df['COMMITTEE_TYPE'].fillna(value=0,inplace=True)
+    filers_df.loc[:,'OFFICE']=filers_df['OFFICE'].apply(lambda x: x if pd.isna(x) else str(x)[0:2])
+    filers_df.loc[:,'DISTRICT']=filers_df['DISTRICT'].apply(lambda x: x if pd.isna(x) else str(x).split('.')[0])
     filers_df_new = filers_df[~filers_df['COMMITTEE_TYPE'].isin(['7HV','INACTIVE'])]
     return filers_df_new
 
