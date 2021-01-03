@@ -49,6 +49,7 @@ def fix_filings(filings_dir, infile_name, outfile_name):
             line=line.replace('"01/23/2006","","","","",","","","","","","","","","","0","","","","","","DUPLICATE FILING FROM OFF CYCLE 2006"','"01/23/2006","","","","","","","","","","","","","","","0","","","","","","DUPLICATE FILING FROM OFF CYCLE 2006"')
             line=line.replace('"C38478","K","A","2010","5637","04/23/2009","","CAN","","","",","",","",","",","",","",","","",","","0","","","","","","TO DELETE DUPLICATE ENTRY","","","JR","03/25/2011 13:51:20"',
             '"C38478","K","A","2010","5637","04/23/2009","","CAN","","","","","","","","","","","","0","","","","","","TO DELETE DUPLICATE ENTRY","","","JR","03/25/2011 13:51:20"')
+            line=line.replace('"2285 "PEACHTREE ROAD, NE, UNIT 405","ATLANTA"','"2285 PEACHTREE ROAD, NE, UNIT 405","ATLANTA"')
             if len(line.split('","')) != 30:
                 bad_filings.write(line1)
             else:
