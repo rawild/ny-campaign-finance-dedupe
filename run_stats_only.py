@@ -3,7 +3,7 @@ import psycopg2
 import psycopg2.extras
 import time
 import argparse
-from matching_evaluation.combine_predicates import get_predicates
+from matching_evaluation.combine_predicates import (get_predicates)
 
 def run_stats(type, settings_file):
     db_conf = dj_database_url.config()
