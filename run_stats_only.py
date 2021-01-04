@@ -3,6 +3,7 @@ import psycopg2
 import psycopg2.extras
 import time
 import argparse
+import locale
 from matching_evaluation.combine_predicates import (get_predicates)
 
 def run_stats(type, settings_file):
@@ -27,6 +28,7 @@ def run_stats(type, settings_file):
                                  host=db_conf['HOST'],
                                  port=db_conf['PORT'])
     
+    locale.setlocale(locale.LC_ALL,'en_US.UTF-8')  # for pretty printing numbers
 
     if type == 'IND':
         top_donor_where = 'donors.corp is null'

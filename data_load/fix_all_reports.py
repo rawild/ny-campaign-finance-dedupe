@@ -50,6 +50,9 @@ def fix_filings(filings_dir, infile_name, outfile_name):
             line=line.replace('"C38478","K","A","2010","5637","04/23/2009","","CAN","","","",","",","",","",","",","",","","",","","0","","","","","","TO DELETE DUPLICATE ENTRY","","","JR","03/25/2011 13:51:20"',
             '"C38478","K","A","2010","5637","04/23/2009","","CAN","","","","","","","","","","","","0","","","","","","TO DELETE DUPLICATE ENTRY","","","JR","03/25/2011 13:51:20"')
             line=line.replace('"2285 "PEACHTREE ROAD, NE, UNIT 405","ATLANTA"','"2285 PEACHTREE ROAD, NE, UNIT 405","ATLANTA"')
+            line=line.replace('"WHITE",""125 RIVER ST BLDG 1, 2G","TROY"','"WHITE","125 RIVER ST BLDG 1, 2G","TROY"')
+            line=line.replace('"MEYER",""""381 2ND ST  HOSTOS COMMITTEE, 500","BROOKLYN",','"MEYER","381 2ND ST  HOSTOS COMMITTEE, 500","BROOKLYN",')
+            line=line.replace('"LIVING INDEPENDENTLY GROUP, INC.","","","",""767 THIRD AVENUE, 20TH FLOOR","NEW YORK"','"LIVING INDEPENDENTLY GROUP, INC.","","","","767 THIRD AVENUE, 20TH FLOOR","NEW YORK"')
             if len(line.split('","')) != 30:
                 bad_filings.write(line1)
             else:
