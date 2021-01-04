@@ -140,7 +140,7 @@ def run_stats(type, settings_file):
             (completed, predicates, total_clusters, avg_cluster_size, biggest_cluster_size, biggest_cluster,
              total_donors, donor_type, donor_cluster_ratio, settings_file)
             VALUES (NOW(), %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s) """,
+            %s, %s, %s, %s) """,
             (' '.join(str(pred) for pred in predicates), number_of_clusters, average_size, biggest_size, biggest_name,
             number_of_donors, type, donor_cluster_ratio, settings_file)
         )
@@ -149,7 +149,7 @@ def run_stats(type, settings_file):
     read_con.close()
     write_con.close()
 
-    print('ran in', runtime, 'seconds')
+    #print('ran in', runtime, 'seconds')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='run campaign finance dedupe')
