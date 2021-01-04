@@ -54,6 +54,7 @@ class Readable(object):
 
 # Created after connection timeouts during the score call
 def reconnect_record_pairs(start):
+    blocking_table = 'blocking_map_'+type
     db_conf = dj_database_url.config()
     read_con = psycopg2.connect(database=db_conf['NAME'],
                                 user=db_conf['USER'],
@@ -62,26 +63,25 @@ def reconnect_record_pairs(start):
                                 port=db_conf['PORT'],
                                 cursor_factory=psycopg2.extras.RealDictCursor)
     with read_con.cursor('pairs', cursor_factory=psycopg2.extensions.cursor) as read_cur:
-        read_cur.execute("""
-               select a.donor_id,
-                      row_to_json((select d from (select a.city,
-                                                         a.name,
-                                                         a.zip,
-                                                         a.state,
-                                                         a.street) d)),
-                      b.donor_id,
-                      row_to_json((select d from (select b.city,
-                                                         b.name,
-                                                         b.zip,
-                                                         b.state,
-                                                         b.street) d))
-               from (select DISTINCT l.donor_id as east, r.donor_id as west
-                     from blocking_map as l
-                     INNER JOIN blocking_map as r
-                     using (block_key)
-                     where l.donor_id < r.donor_id) ids
-               INNER JOIN processed_donors a on ids.east=a.donor_id
-               INNER JOIN processed_donors b on ids.west=b.donor_id""")
+        read_cur.execute("SELECT a.donor_id, "
+                      "row_to_json((SELECT d FROM (SELECT a.city, "
+                                                         "a.name, "
+                                                         "a.zip, "
+                                                         "a.state, "
+                                                         "a.street) d)), "
+                      "b.donor_id, "
+                      "row_to_json((SELECT d FROM (SELECT b.city, "
+                                                         "b.name, "
+                                                         "b.zip, "
+                                                         "b.state, "
+                                                         "b.street) d)) "
+               "FROM (SELECT DISTINCT l.donor_id AS east, r.donor_id AS west "
+                     "FROM AS l "
+                     "INNER JOIN "+blocking_table+" AS r "
+                     "USING (block_key) "
+                     "WHERE l.donor_id < r.donor_id) ids "
+               "INNER JOIN processed_donors a ON ids.east=a.donor_id "
+               "INNER JOIN processed_donors b ON ids.west=b.donor_id")
     record_pairs(read_cur, start)
 
 # yeilds record pairs from a given cursor result
@@ -229,10 +229,11 @@ def run_dedupe(settings_file, training_file, type):
     # To run blocking on such a large set of data, we create a separate table
     # that contains blocking keys and record ids
     print('creating blocking_map database')
+    blocking_table = 'blocking_map_'+type
     with write_con:
         with write_con.cursor() as cur:
-            cur.execute("DROP TABLE IF EXISTS blocking_map")
-            cur.execute("CREATE TABLE blocking_map "
+            cur.execute("DROP TABLE IF EXISTS "+blocking_table)
+            cur.execute("CREATE TABLE "+blocking_table+" "
                         "(block_key text, donor_id INTEGER)")
 
     # If dedupe learned a Index Predicate, we have to take a pass
@@ -257,7 +258,7 @@ def run_dedupe(settings_file, training_file, type):
 
         with write_con:
             with write_con.cursor() as write_cur:
-                write_cur.copy_expert('COPY blocking_map FROM STDIN WITH CSV',
+                write_cur.copy_expert('COPY '+blocking_table+' FROM STDIN WITH CSV',
                                       Readable(b_data),
                                       size=100000)
 
@@ -267,41 +268,41 @@ def run_dedupe(settings_file, training_file, type):
     logging.info("indexing block_key")
     with write_con:
         with write_con.cursor() as cur:
-            cur.execute("CREATE UNIQUE INDEX ON blocking_map "
+            cur.execute("CREATE UNIQUE INDEX ON "+blocking_table+" "
                         "(block_key text_pattern_ops, donor_id)")
 
     # ## Clustering
-
+    entity_map_table="entity_map_"+type
     with write_con:
         with write_con.cursor() as cur:
-            cur.execute("DROP TABLE IF EXISTS entity_map")
+            cur.execute("DROP TABLE IF EXISTS "+entity_map_table)
 
             print('creating entity_map database')
-            cur.execute("CREATE TABLE entity_map "
+            
+            cur.execute("CREATE TABLE "+entity_map_table+" "
                         "(donor_id INTEGER, canon_id INTEGER, "
                         " cluster_score FLOAT, PRIMARY KEY(donor_id))")
 
     with read_con.cursor('pairs', cursor_factory=psycopg2.extensions.cursor) as read_cur:
-        read_cur.execute("""
-               select a.donor_id,
-                      row_to_json((select d from (select a.city,
-                                                         a.name,
-                                                         a.zip,
-                                                         a.state,
-                                                         a.street) d)),
-                      b.donor_id,
-                      row_to_json((select d from (select b.city,
-                                                         b.name,
-                                                         b.zip,
-                                                         b.state,
-                                                         b.street) d))
-               from (select DISTINCT l.donor_id as east, r.donor_id as west
-                     from blocking_map as l
-                     INNER JOIN blocking_map as r
-                     using (block_key)
-                     where l.donor_id < r.donor_id) ids
-               INNER JOIN processed_donors a on ids.east=a.donor_id
-               INNER JOIN processed_donors b on ids.west=b.donor_id""")
+        read_cur.execute("SELECT a.donor_id, "
+                      "row_to_json((SELECT d FROM (SELECT a.city, "
+                                                         "a.name, "
+                                                         "a.zip, "
+                                                         "a.state, "
+                                                         "a.street) d)), "
+                      "b.donor_id, "
+                      "row_to_json((SELECT d FROM (SELECT b.city, "
+                                                         "b.name, "
+                                                         "b.zip, "
+                                                         "b.state, "
+                                                         "b.street) d)) "
+               "FROM (SELECT DISTINCT l.donor_id AS east, r.donor_id AS west "
+                     "FROM AS l "
+                     "INNER JOIN "+blocking_table+" AS r "
+                     "USING (block_key) "
+                     "WHERE l.donor_id < r.donor_id) ids "
+               "INNER JOIN processed_donors a ON ids.east=a.donor_id "
+               "INNER JOIN processed_donors b ON ids.west=b.donor_id")
 
         print('clustering...')
         clustered_dupes = deduper.cluster(deduper.score(record_pairs(read_cur)),
@@ -316,13 +317,13 @@ def run_dedupe(settings_file, training_file, type):
         print('writing results')
         with write_con:
             with write_con.cursor() as write_cur:
-                write_cur.copy_expert('COPY entity_map FROM STDIN WITH CSV',
+                write_cur.copy_expert('COPY '+entity_map_table+' FROM STDIN WITH CSV',
                                       Readable(cluster_ids(clustered_dupes)),
                                       size=100000)
 
     with write_con:
         with write_con.cursor() as cur:
-            cur.execute("CREATE INDEX head_index ON entity_map (canon_id)")
+            cur.execute("CREATE INDEX head_index ON "+entity_map_table+" (canon_id)")
 
     # Print out the number of duplicates found
 
@@ -353,7 +354,7 @@ def run_dedupe(settings_file, training_file, type):
     with read_con.cursor() as cur:
         cur.execute("CREATE TEMPORARY TABLE e_map "
                     "AS SELECT COALESCE(canon_id, donor_id) AS canon_id, donor_id "
-                    "FROM entity_map "
+                    "FROM "+entity_map_table+" "
                     "RIGHT JOIN donors USING(donor_id)")
 
         cur.execute(
@@ -399,7 +400,7 @@ def run_dedupe(settings_file, training_file, type):
             " cluster_size, cluster_id "
             " FROM (SELECT * FROM donors WHERE "+top_donor_where+") as donors "
             " INNER JOIN (SELECT count(*) AS cluster_size, canon_id AS cluster_id "
-            " FROM entity_map "
+            " FROM "+entity_map_table+" "
             " GROUP BY canon_id) "
             " AS cluster_totals "
             " ON donors.donor_id = cluster_totals.cluster_id "
@@ -430,7 +431,7 @@ def run_dedupe(settings_file, training_file, type):
             " cluster_size, cluster_id "
             " FROM (SELECT * FROM donors WHERE "+top_donor_where+") as donors"
             " INNER JOIN (SELECT count(*) AS cluster_size, canon_id AS cluster_id "
-            " FROM entity_map "
+            " FROM "+entity_map_table+" "
             " GROUP BY canon_id) "
             " AS cluster_totals "
             " ON donors.donor_id = cluster_totals.cluster_id "
