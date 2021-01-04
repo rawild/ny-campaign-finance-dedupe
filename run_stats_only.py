@@ -131,18 +131,18 @@ def run_stats(type, settings_file):
             average_size = row['average']
             number_of_clusters = row['number_of_clusters']
     # write to the match_run table
-    runtime = time.time() - start_time
+    #runtime = time.time() - start_time
     donor_cluster_ratio = number_of_donors/number_of_clusters
     predicates = get_predicates(settings_file)
     with write_con.cursor() as cur:
         cur.execute(""" 
             INSERT INTO match_runs 
             (completed, predicates, total_clusters, avg_cluster_size, biggest_cluster_size, biggest_cluster,
-             total_donors, donor_type, total_run_time, donor_cluster_ratio, settings_file)
+             total_donors, donor_type, donor_cluster_ratio, settings_file)
             VALUES (NOW(), %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s) """,
             (' '.join(str(pred) for pred in predicates), number_of_clusters, average_size, biggest_size, biggest_name,
-            number_of_donors, type, runtime, donor_cluster_ratio, settings_file)
+            number_of_donors, type, donor_cluster_ratio, settings_file)
         )
     write_con.commit()
 
