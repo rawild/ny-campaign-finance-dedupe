@@ -283,7 +283,13 @@ def run_dedupe(settings_file, training_file, type):
                         "(donor_id INTEGER, canon_id INTEGER, "
                         " cluster_score FLOAT, PRIMARY KEY(donor_id))")
 
-    with read_con.cursor('pairs', cursor_factory=psycopg2.extensions.cursor) as read_cur:
+    read_con1 = psycopg2.connect(database=db_conf['NAME'],
+                                user=db_conf['USER'],
+                                password=db_conf['PASSWORD'],
+                                host=db_conf['HOST'],
+                                port=db_conf['PORT'],
+                                cursor_factory=psycopg2.extras.RealDictCursor)
+    with read_con1.cursor('pairs', cursor_factory=psycopg2.extensions.cursor) as read_cur:
         read_cur.execute("SELECT a.donor_id, "
                       "row_to_json((SELECT d FROM (SELECT a.city, "
                                                          "a.name, "
