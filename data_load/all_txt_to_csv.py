@@ -1,5 +1,5 @@
 '''
-script to get a random sample from the filer and filings files from the nyboe massive files.
+script to transform the filer and filings files from the nyboe massive files with no headers to csv files with column names.
 sample usage:
 python all_txt_to_csv.py '../../commcand' '../../ALL_REPORTS' 'ALL_REPORTS_fixed.txt'
 '''
