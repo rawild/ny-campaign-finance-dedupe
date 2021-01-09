@@ -76,7 +76,7 @@ def reconnect_record_pairs(start):
                                                          "b.state, "
                                                          "b.street) d)) "
                "FROM (SELECT DISTINCT l.donor_id AS east, r.donor_id AS west "
-                     "FROM "+blocking_table+"AS l "
+                     "FROM "+blocking_table+" AS l "
                      "INNER JOIN "+blocking_table+" AS r "
                      "USING (block_key) "
                      "WHERE l.donor_id < r.donor_id) ids "
