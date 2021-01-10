@@ -218,7 +218,7 @@ def run_dedupe(settings_file, training_file, type):
                                  port=db_conf['PORT'])
         with write_con1:
             with write_con1.cursor() as write_cur:
-                write_cur1.copy_expert('COPY '+entity_map_table+' FROM STDIN WITH CSV',
+                write_cur.copy_expert('COPY '+entity_map_table+' FROM STDIN WITH CSV',
                                       Readable(cluster_ids(clustered_dupes)),
                                       size=100000)
 
