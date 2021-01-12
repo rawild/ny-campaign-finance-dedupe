@@ -66,7 +66,7 @@ def processFiles(recipients_file, contributions_file):
             " check_no VARCHAR(30), check_date VARCHAR(10), "
             " amount VARCHAR(23), amount2 VARCHAR(23), "
             " description VARCHAR(300), other_recpt_code VARCHAR(50), "
-            " purpose_code1 VARCHAR(5), purpose_code2 VARCHAR(20), "
+            " purpose_code1 VARCHAR(7), purpose_code2 VARCHAR(40), "
             " explanation VARCHAR(300), xfer_type VARCHAR(20), "
             " chkbox VARCHAR(20), crerec_uid VARCHAR(20), "
             " crerec_date VARCHAR(19))")
