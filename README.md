@@ -3,6 +3,7 @@ Deduplication Algorithm for NY State Donors
 
 With the library of dedupe.io: 
 https://github.com/dedupeio/dedupe
+
 Documentation: https://docs.dedupe.io/
 
 Use this to match donors from accross campaign donation filings in New York State.
