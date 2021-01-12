@@ -8,7 +8,7 @@ from matching_evaluation.combine_predicates import (get_predicates)
 
 def run_stats(type, settings_file):
     db_conf = dj_database_url.config()
-
+    entity_map_table = "entity_map_"+type
     if not db_conf:
         raise Exception(
             'set DATABASE_URL environment variable with your connection, e.g. '
@@ -39,7 +39,7 @@ def run_stats(type, settings_file):
     with read_con.cursor() as cur:
         cur.execute("CREATE TEMPORARY TABLE e_map "
                     "AS SELECT COALESCE(canon_id, donor_id) AS canon_id, donor_id "
-                    "FROM entity_map "
+                    "FROM "+entity_map_table+" "
                     "RIGHT JOIN donors USING(donor_id)")
 
         cur.execute(
@@ -85,7 +85,7 @@ def run_stats(type, settings_file):
             " cluster_size, cluster_id "
             " FROM (SELECT * FROM donors WHERE "+top_donor_where+") as donors "
             " INNER JOIN (SELECT count(*) AS cluster_size, canon_id AS cluster_id "
-            " FROM entity_map "
+            " FROM "+entity_map_table+" "
             " GROUP BY canon_id) "
             " AS cluster_totals "
             " ON donors.donor_id = cluster_totals.cluster_id "
@@ -116,7 +116,7 @@ def run_stats(type, settings_file):
             " cluster_size, cluster_id "
             " FROM (SELECT * FROM donors WHERE "+top_donor_where+") as donors"
             " INNER JOIN (SELECT count(*) AS cluster_size, canon_id AS cluster_id "
-            " FROM entity_map "
+            " FROM "+entity_map_table+" "
             " GROUP BY canon_id) "
             " AS cluster_totals "
             " ON donors.donor_id = cluster_totals.cluster_id "

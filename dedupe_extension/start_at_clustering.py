@@ -224,7 +224,7 @@ def run_dedupe(settings_file, training_file, type):
 
     with write_con1:
         with write_con1.cursor() as cur:
-            cur.execute("CREATE INDEX head_index ON "+entity_map_table+" (canon_id)")
+            cur.execute("CREATE INDEX head_index_"+type+" ON "+entity_map_table+" (canon_id)")
 
     # Print out the number of duplicates found
 
