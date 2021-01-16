@@ -321,15 +321,20 @@ def run_dedupe(settings_file, training_file, type):
         # table
 
         print('writing results')
-        with write_con:
-            with write_con.cursor() as write_cur:
+        write_con1 = psycopg2.connect(database=db_conf['NAME'],
+                                 user=db_conf['USER'],
+                                 password=db_conf['PASSWORD'],
+                                 host=db_conf['HOST'],
+                                 port=db_conf['PORT'])
+        with write_con1:
+            with write_con1.cursor() as write_cur:
                 write_cur.copy_expert('COPY '+entity_map_table+' FROM STDIN WITH CSV',
                                       Readable(cluster_ids(clustered_dupes)),
                                       size=100000)
 
-    with write_con:
-        with write_con.cursor() as cur:
-            cur.execute("CREATE INDEX head_index ON "+entity_map_table+" (canon_id)")
+    with write_con1:
+        with write_con1.cursor() as cur:
+            cur.execute("CREATE INDEX head_index_"+type+" ON "+entity_map_table+" (canon_id)")
 
     # Print out the number of duplicates found
 
@@ -341,13 +346,18 @@ def run_dedupe(settings_file, training_file, type):
     # For example, let's see who the top 10 donors are.
 
     locale.setlocale(locale.LC_ALL,'en_US.UTF-8')  # for pretty printing numbers
-
+    read_con2 = psycopg2.connect(database=db_conf['NAME'],
+                                user=db_conf['USER'],
+                                password=db_conf['PASSWORD'],
+                                host=db_conf['HOST'],
+                                port=db_conf['PORT'],
+                                cursor_factory=psycopg2.extras.RealDictCursor)
     # save entity map
-    entity_map_filename = 'entity_map_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
+    entity_map_filename = entity_map_table + "_" + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
     donors_filename = 'processed_donors_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
-    with read_con.cursor() as cur:
+    with read_con2.cursor() as cur:
         with open(entity_map_filename, 'w') as file_out:
-            cur.copy_expert('COPY entity_map TO STDOUT WITH CSV HEADER', file_out)
+            cur.copy_expert('COPY '+entity_map_table+' TO STDOUT WITH CSV HEADER', file_out)
         with open(donors_filename, 'w') as file_out:
             cur.copy_expert('COPY processed_donors TO STDOUT WITH CSV HEADER', file_out)
     
@@ -357,7 +367,7 @@ def run_dedupe(settings_file, training_file, type):
         top_donor_where = 'donors.corp is not null'
     # Create a temporary table so each group and unmatched record has
     # a unique id
-    with read_con.cursor() as cur:
+    with read_con2.cursor() as cur:
         cur.execute("CREATE TEMPORARY TABLE e_map "
                     "AS SELECT COALESCE(canon_id, donor_id) AS canon_id, donor_id "
                     "FROM "+entity_map_table+" "
@@ -454,7 +464,7 @@ def run_dedupe(settings_file, training_file, type):
     # write to the match_run table
     runtime = time.time() - start_time
     donor_cluster_ratio = number_of_donors/number_of_clusters
-    with write_con.cursor() as cur:
+    with write_con1.cursor() as cur:
         cur.execute(""" 
             INSERT INTO match_runs 
             (completed, predicates, total_clusters, avg_cluster_size, biggest_cluster_size, biggest_cluster,
@@ -464,10 +474,13 @@ def run_dedupe(settings_file, training_file, type):
             (' '.join(str(pred) for pred in deduper.predicates), number_of_clusters, average_size, biggest_size, biggest_name,
             number_of_donors, type, runtime, donor_cluster_ratio, settings_file)
         )
-    write_con.commit()
+    write_con1.commit()
 
     read_con.close()
     write_con.close()
+    read_con1.close()
+    write_con1.close()
+    read_con2.close()
 
     print('ran in', runtime, 'seconds')
 

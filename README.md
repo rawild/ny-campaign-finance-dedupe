@@ -7,10 +7,11 @@ https://github.com/dedupeio/dedupe
 Documentation: https://docs.dedupe.io/
 
 Use this to match donors from accross campaign donation filings in New York State.
-There are 2 sets of donors that are parsed differently: 
+There are 2 sets of donors that are parsed differently. When indicating the type of donor you want to deal with use these codes.
 - individual (IND)
 - organizational (CORP)
-when indicating type of donor you want to deal with use these codes.
+
+
 
 # To use
 - install python
@@ -36,10 +37,15 @@ when indicating type of donor you want to deal with use these codes.
     - clean_donors.py
 - run the dedupe extension modules to do the matching
     - campaign_finance_dedupe.py
-Note: the settings directory contains pre-generated settings or you can generate your own
+
+(Note: the settings directory contains pre-generated settings for the matching or you can generate your own)
 
 # Author
 Annalisa Wilde is an MS student at the Graduate Center of the City University of New York in the Data Analysis and Visualization program
+
+Examples of how this data might be used:
+- https://who-pays-donors-zfgp8.ondigitalocean.app/
+- https://rawild.github.io/InteractiveDataVis-Portfolio/project_1/src/
 
 # Copyright
 Copyright (c) 2021 Annalisa Wilde. Released under the GNU General Public License v3.0

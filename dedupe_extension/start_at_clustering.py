@@ -247,7 +247,7 @@ def run_dedupe(settings_file, training_file, type):
     donors_filename = 'processed_donors_' + settings_file.split('/')[-1] + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime()) + '.csv'
     with read_con2.cursor() as cur:
         with open(entity_map_filename, 'w') as file_out:
-            cur.copy_expert('COPY entity_map TO STDOUT WITH CSV HEADER', file_out)
+            cur.copy_expert('COPY '+entity_map_table+' TO STDOUT WITH CSV HEADER', file_out)
         with open(donors_filename, 'w') as file_out:
             cur.copy_expert('COPY processed_donors TO STDOUT WITH CSV HEADER', file_out)
     
