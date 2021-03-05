@@ -1,84 +1,70 @@
-import argparse
-import re
-from all_txt_to_csv import (get_filers,get_filings)
-from init_postgres_db import (processFiles)
+"""
+Source Control: 
+This whole script needs to be re-written in light of the updated data format From NYSBOE on 01/22/2021 
+Old method: fix_filings
+New method: compile_filings_state
+Note that as of 02/14/2021 the file format from the state BOE was not accurately described in the
+"FileFormatReference.pdf" they issued. The column CAND_COMM_NAME does not exist and there is a second
+address column between FLNG_ENT_ADD1 and FLNG_ENT_CITY that is not described in the documentation.
+Feels like they are actively trying to troll
+sample call:
+python3 fix_all_reports.py "../../../../../../WhoPays/NYSBOE_Data_02142021" "02142021_processed.csv"
+"""
+import argparse, sys
 import pandas as pd
 
-def fix_filings(filings_dir, infile_name, outfile_name):
-    orig_filings = open(filings_dir+"/"+infile_name,'r', encoding="latin-1")
-    fixed_filings = open(filings_dir+"/"+outfile_name,'w', encoding="latin-1")
-    bad_filings = open(filings_dir+"/"+"bad_"+outfile_name,'w', encoding="latin-1")
-    target_filings = open(filings_dir+"/"+"target_"+outfile_name,'w', encoding="latin-1")
-    for i,line in enumerate(orig_filings):
-        if len(line.split('","')) != 30:
-            bad_filings.write(line)
-        else:
-            line1=line
-            line=line.replace('LABORERS"",','LABORERS",')
-            line=line.replace(',",',',"",')
-            line=line.replace('"O"C','"O\'')
-            line=line.replace('"O"C','"O\'')
-            line=line.replace(',"          "",',',"",')
-            line=line.replace(',"",ICHAEL",',',"ICHAEL",')
-            line=line.replace('"", JR."','"JR."')
-            line=re.sub('"{2}(?=\w)','"',line)
-            line=re.sub('(?<=[\w .,]),"(?!,")','',line)
-            line=re.sub('(?<!,)""",','",',line)
-            line=re.sub(',""",',',"",',line)
-            line=re.sub('(?<!,)""','"',line)
-            line=re.sub('"",(?=\w)','"","',line)
-            line=re.sub('(?<=\w)\.,"","","","","(?=\w)','.","","","","',line)
-            line=re.sub(',"NEW YORK","","NY","(?=\d)',',"NEW YORK","NY","',line)
-            line=re.sub(',"PITTSBURGH","","PA","(?=\d)',',"PITTSBURGH","PA","',line)
-            line=re.sub('(?<=\w)","","LAKE PLACID","','","LAKE PLACID","',line)
-            line=re.sub('(?<=\w)","","GARDEN CITY","','","GARDEN CITY","',line)
-            line=re.sub('(?<=\w)","","ALBANY","','","ALBANY","',line)
-            line=re.sub('(?<=\w)","","LONG BEACH","','","LONG BEACH","',line)
-            line=re.sub('(?<=\w)","","COLUMBUS","','","COLUMBUS","',line)
-            line=re.sub('(?<=\w),15D","","","","","2\w',',15D","","","","2',line)
-            line=line.replace('PO BOX 113","","POINT LOOKOUT",','PO BOX 113","POINT LOOKOUT",')
-            line=line.replace('SPELLMAN","","659 ELY','SPELLMAN","659 ELY')
-            line=line.replace('OFFICERS PAC INC","","","","","504 EAST','OFFICERS PAC INC","","","","504 EAST')
-            line=line.replace('GRECO & SLISZ","","FRANCIS','GRECO & SLISZ","FRANCIS')
-            line=line.replace('";,""','"",""')
-            line=line.replace(',"Z;,"",',',"",')
-            line=line.replace('", RONNIE E"','"RONNIE E"')
-            line=line.replace(',"",, 41 MAPLEWOOD ST"',',"41 MAPLEWOOD ST"')
-            line=line.replace('"MARY","E","HALL","", APT. C-19"','"MARY","E","HALL","APT. C-19"')
-            line=line.replace(',"","", MESSENGER, & PEARL ASSOC."',',"","MESSENGER, & PEARL ASSOC."')
-            line=line.replace('"01/23/2006","","","","",","","","","","","","","","","0","","","","","","DUPLICATE FILING FROM OFF CYCLE 2006"','"01/23/2006","","","","","","","","","","","","","","","0","","","","","","DUPLICATE FILING FROM OFF CYCLE 2006"')
-            line=line.replace('"C38478","K","A","2010","5637","04/23/2009","","CAN","","","",","",","",","",","",","",","","",","","0","","","","","","TO DELETE DUPLICATE ENTRY","","","JR","03/25/2011 13:51:20"',
-            '"C38478","K","A","2010","5637","04/23/2009","","CAN","","","","","","","","","","","","0","","","","","","TO DELETE DUPLICATE ENTRY","","","JR","03/25/2011 13:51:20"')
-            line=line.replace('"2285 "PEACHTREE ROAD, NE, UNIT 405","ATLANTA"','"2285 PEACHTREE ROAD, NE, UNIT 405","ATLANTA"')
-            line=line.replace('"WHITE",""125 RIVER ST BLDG 1, 2G","TROY"','"WHITE","125 RIVER ST BLDG 1, 2G","TROY"')
-            line=line.replace('"MEYER",""""381 2ND ST  HOSTOS COMMITTEE, 500","BROOKLYN",','"MEYER","381 2ND ST  HOSTOS COMMITTEE, 500","BROOKLYN",')
-            line=line.replace('"LIVING INDEPENDENTLY GROUP, INC.","","","",""767 THIRD AVENUE, 20TH FLOOR","NEW YORK"','"LIVING INDEPENDENTLY GROUP, INC.","","","","767 THIRD AVENUE, 20TH FLOOR","NEW YORK"')
-            if len(line.split('","')) != 30:
-                bad_filings.write(line1)
-            else:
-                fixed_filings.write(line)
+def compile_filings_state(filings_dir, outfile_name):
+    data_locations = [{"directory": "ALL_REPORTS_CountyCandidate", "file": "COUNTY_CANDIDATE.csv"},
+    {"directory":"ALL_REPORTS_CountyCommittee","file": "COUNTY_COMMITTEE.csv"},
+    {"directory":"ALL_REPORTS_StateCandidate","file":"STATE_CANDIDATE.csv"},
+    {"directory":"ALL_REPORTS_StateCommittee","file":"STATE_COMMITTEE.csv"}]
+    columns = ["FILER_ID","FILER_PREVIOUS_ID","ELECTION_YEAR","ELECTION_TYPE",
+        "COUNTY_DESC","FILING_ABBREV","FILING_DESC","R_AMEND","FILING_CAT_DESC",
+        "FILING_SCHED_ABBREV","FILING_SCHED_DESC","LOAN_LIB_NUMBER","TRANS_NUMBER","TRANS_MAPPING",
+        "SCHED_DATE","ORG_DATE","CNTRBR_TYPE_DESC","CNTRBN_TYPE_DESC","TRANSFER_TYPE_DESC",
+        "RECEIPT_TYPE_DESC","RECEIPT_CODE_DESC","PURPOSE_CODE_DESC","R_SUBCONTRACTOR","FLNG_ENT_NAME",
+        "FLNG_ENT_FIRST_NAME","FLNG_ENT_MIDDLE_NAME","FLNG_ENT_LAST_NAME","FLNG_ENT_ADD1",
+        "FLNG_ENT_ADD2","FLNG_ENT_CITY",
+        "FLNG_ENT_STATE","FLNG_ENT_ZIP","FLNG_ENT_COUNTRY","PAYMENT_TYPE_DESC","PAY_NUMBER",
+        "OWED_AMT","ORG_AMT","LOAN_OTHER_DESC","TRANS_EXPLNTN","R_ITEMIZED",
+        "R_LIABILITY","ELECTION_YEAR_2","OFFICE_DESC","DISTRICT","DIST_OFF_CAND_BAL_PROP"]
+    main_df = pd.DataFrame(None,columns=columns)
+    console_out = sys.stderr
+    for file in data_locations:
+        with open(filings_dir+"/"+file["directory"]+"/"+file["file"].split(".")[0]+"_badlines.txt","w") as f:
+            sys.stderr=f
+            df = pd.read_csv(filings_dir+"/"+file["directory"]+"/"+file["file"], header=None, encoding="latin1", error_bad_lines=False, 
+            dtype={0:"int",1:"str",2:"str",3:"str",4:"str",5:"str",6:"str",7:"str",8:"str",9:"str",
+            10:"str",11:"str",12:"str",13:"str",14:"str",15:"str",16:"str",17:"str",18:"str",19:"str",
+            20:"str",21:"str",22:"str",23:"str",24:"str",25:"str",26:"str",27:"str",28:"str",
+            29:"str",30:"str",31:"str",32:"str",33:"str",34:"str",35:"str",36:"str",37:"str",38:"str",39:"str",
+            40:"str",41:"str",42:"str",43:"str",44:"str"})
+            df.rename(columns={0:"FILER_ID",1:"FILER_PREVIOUS_ID",2:"ELECTION_YEAR",3:"ELECTION_TYPE",
+            4:"COUNTY_DESC",5:"FILING_ABBREV",6:"FILING_DESC",7:"R_AMEND",8:"FILING_CAT_DESC",
+            9:"FILING_SCHED_ABBREV",10:"FILING_SCHED_DESC",11:"LOAN_LIB_NUMBER",12:"TRANS_NUMBER",13:"TRANS_MAPPING",
+            14:"SCHED_DATE",15:"ORG_DATE",16:"CNTRBR_TYPE_DESC",17:"CNTRBN_TYPE_DESC",18:"TRANSFER_TYPE_DESC",
+            19:"RECEIPT_TYPE_DESC",20:"RECEIPT_CODE_DESC",21:"PURPOSE_CODE_DESC",22:"R_SUBCONTRACTOR",23:"FLNG_ENT_NAME",
+            24:"FLNG_ENT_FIRST_NAME",25:"FLNG_ENT_MIDDLE_NAME",26:"FLNG_ENT_LAST_NAME",27:"FLNG_ENT_ADD1",
+            28:"FLNG_ENT_ADD2",29:"FLNG_ENT_CITY",
+            30:"FLNG_ENT_STATE",31:"FLNG_ENT_ZIP",32:"FLNG_ENT_COUNTRY",33:"PAYMENT_TYPE_DESC",34:"PAY_NUMBER",
+            35:"OWED_AMT",36:"ORG_AMT",37:"LOAN_OTHER_DESC",38:"TRANS_EXPLNTN",39:"R_ITEMIZED",
+            40:"R_LIABILITY",41:"ELECTION_YEAR_2",42:"OFFICE_DESC",43:"DISTRICT",44:"DIST_OFF_CAND_BAL_PROP"}, inplace=True)
+            main_df = pd.concat([main_df,df], ignore_index=True, sort=False)
+            sys.stderr.close()
+    sys.stderr=console_out
+    main_df.to_csv(filings_dir+"/"+outfile_name, index=False)
+    main_df.head(200000).to_csv(filings_dir+"/"+outfile_name.split(".")[0]+"_cut.csv")
+    print("final length: "+str(main_df.shape[0]))
 
-    orig_filings.close()
-    fixed_filings.close()
-    bad_filings.close()
+
 def finish():
     print("Finished")
 
 
-def fix_testing(filings_dir, infile_name, outfile_name):
-    fix_filings(filings_dir,infile_name, outfile_name)
-    filers = get_filers('../../boe_data_12_30_20/commcand')
-    filings= get_filings(filings_dir,outfile_name)
-    filers.to_csv('filers_'+outfile_name.split('.')[0]+'.csv',index=False)
-    filings.to_csv('filings_'+outfile_name.split('.')[0]+'.csv',index=False)
-    processFiles('filers_'+outfile_name.split('.')[0]+'.csv','filings_'+outfile_name.split('.')[0]+'.csv')
-    finish()
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='fix all reports')
     parser.add_argument('filings_dir', help='route to filings files directory')
-    parser.add_argument('infile_name', help='original filings name ')
     parser.add_argument('outfile_name', help = 'desired output name')
     args=parser.parse_args()
-    fix_filings(str(args.filings_dir), str(args.infile_name),str(args.outfile_name))
+    compile_filings_state(str(args.filings_dir), str(args.outfile_name))
     finish()
