@@ -67,19 +67,20 @@ def processFiles(state_recip_file, state_contrib_file, city_contrib_file):
             " r_amend VARCHAR(1), filing_cat_desc VARCHAR(80), filing_sched_abbrev VARCHAR(1), "
             " filing_sched_desc VARCHAR(80), loan_lib_number VARCHAR(100), trans_number VARCHAR(100), "
             " trans_mapping VARCHAR(100), sched_date VARCHAR(10), org_date VARCHAR(10), "
-            " cntrbr_type_desc VARCHAR(80), cntrbn_type_desc VARCHAR(80), transfer_type_desc VARCHAR(80), "
+            " cntrbr_type_desc VARCHAR(80), cntrbn_type_desc VARCHAR(80), transfer_type_desc VARCHAR(200), "
             " receipt_type_desc VARCHAR(80), receipt_type_code VARCHAR(80), purpose_code_desc VARCHAR(80), "
-            " r_subscontractor VARCHAR(1), flng_ent_name VARCHAR(40), flng_ent_first_name VARCHAR(30), "
-            " flng_ent_middle_name VARCHAR(30), flng_ent_last_name VARCHAR(30), flng_ent_add1 VARCHAR(30), "
-            " flng_ent_city VARCHAR(30), flng_ent_state VARCHAR(2), flng_ent_zip VARCHAR(10), "
+            " r_subscontractor VARCHAR(1), flng_ent_name VARCHAR(250), flng_ent_first_name VARCHAR(100), "
+            " flng_ent_middle_name VARCHAR(50), flng_ent_last_name VARCHAR(100), flng_ent_add1 VARCHAR(100), "
+            " flng_ent_add2 VARCHAR(30), "
+            " flng_ent_city VARCHAR(50), flng_ent_state VARCHAR(20), flng_ent_zip VARCHAR(30), "
             " flng_ent_country VARCHAR(30), payment_type_desc VARCHAR(80), pay_number VARCHAR(30), "
-            " owed_amt VARCHAR(8), org_amt VARCHAR(12), loan_other_desc VARCHAR(80), "
-            " trans_explntn VARCHAR(250), r_itemized VARCHAR(1), r_liability VARCHAR(1), "
+            " owed_amt VARCHAR(20), org_amt VARCHAR(50), loan_other_desc VARCHAR(80), "
+            " trans_explntn VARCHAR(300), r_itemized VARCHAR(4), r_liability VARCHAR(1), "
             " election_year_2 VARCHAR(4), office_desc VARCHAR(100), district VARCHAR(40), "
             " dist_off_cand_bal_prop VARCHAR(500))")
     conn.commit()
 
-    with open(state_contrib_file, 'rU') as csv_file:
+    with open(state_contrib_file, 'r+') as csv_file:
         c.copy_expert("COPY raw_table_state "
                     "(filer_id, filer_id_prev, " 
                     " election_year, election_type, "
@@ -91,6 +92,7 @@ def processFiles(state_recip_file, state_contrib_file, city_contrib_file):
                     " receipt_type_desc, receipt_type_code, purpose_code_desc, "
                     " r_subscontractor, flng_ent_name, flng_ent_first_name, "
                     " flng_ent_middle_name, flng_ent_last_name, flng_ent_add1, "
+                    " flng_ent_add2, "
                     " flng_ent_city, flng_ent_state, flng_ent_zip, "
                     " flng_ent_country, payment_type_desc, pay_number, "
                     " owed_amt, org_amt, loan_other_desc, "
@@ -107,45 +109,70 @@ def processFiles(state_recip_file, state_contrib_file, city_contrib_file):
             " corp VARCHAR(50), "
             " street VARCHAR(70), "
             " city VARCHAR(50), state VARCHAR(15), "
-            " zip VARCHAR(10), type VARCHAR(10),)")
+            " zip VARCHAR(20), type VARCHAR(10), source VARCHAR(6))")
 
     c.execute("INSERT INTO donors "
             "(first_name, middle_name, last_name, corp, street, "
-            " city, state, zip, type) "
+            " city, state, zip, type, source) "
             "SELECT DISTINCT "
             "LOWER(TRIM(flng_ent_first_name)), LOWER(TRIM(flng_ent_middle_name)), LOWER(TRIM(flng_ent_last_name)), "
             "LOWER(TRIM(flng_ent_name)), "
-            "LOWER(TRIM(flng_ent_addr_1)),LOWER(TRIM(flng_ent_city)), "
+            "LOWER(CONCAT(TRIM(flng_ent_add1),' ',TRIM(flng_ent_add2))),LOWER(TRIM(flng_ent_city)), "
             "LOWER(TRIM(flng_ent_state)), LOWER(TRIM(flng_ent_zip)), "
-            "LOWER(TRIM(cntrbr_type_desc))" "
+            "CASE WHEN cntrbr_type_desc = 'Candidate/Canditate Spouse' "
+            "THEN 'CAN' "
+            "WHEN cntrbr_type_desc = 'Individual' "
+            "THEN 'IND' "
+            "WHEN cntrbr_type_desc = 'Unitemized' "
+            "THEN 'UNITEM' "
+            "WHEN cntrbr_type_desc = 'Partnership, including LLPs' "
+            "THEN 'PART' "
+            "WHEN cntrbr_type_desc = 'Candidate Family Member' "
+            "THEN 'FAM' "
+            "WHEN cntrbr_type_desc = 'Political Committee' "
+            "THEN 'PAC' "
+            "WHEN cntrbr_type_desc = 'Political Action Committee (PAC)' "
+            "THEN 'PAC' "
+            "WHEN cntrbr_type_desc = 'Committee' "
+            "THEN 'COM' "
+            "WHEN cntrbr_type_desc = 'Other' "
+            "THEN 'OTHER' "
+            "WHEN cntrbr_type_desc = 'Sole Proprietorship' "
+            "THEN 'CORP' "
+            "WHEN cntrbr_type_desc = 'Corporation' "
+            "THEN 'CORP' "
+            "WHEN cntrbr_type_desc IS NULL "
+            "THEN 'CORP' "
+            "ELSE 'UNK' "
+            "END AS type, 'NYSBOE' as source "
             "FROM raw_table_state "
             "WHERE filing_sched_abbrev IN ('A','B','C','D','E')")
     conn.commit()
 
     print('importing raw data from city csv...')
     c.execute("CREATE TABLE raw_table_city "
-            "(election VARCHAR(4), officecd VARCHAR(1), recipid VARCHAR(5), canclass VARCHAR(1), "
+            "(election VARCHAR(4), officecd VARCHAR(5), recipid VARCHAR(5), canclass VARCHAR(3), "
             "candfirst VARCHAR(100), candlast VARCHAR(100), candmi VARCHAR(1), "
-            "committee VARCHAR(1), filing VARCHAR(4), schedule VARCHAR(4), "
+            "committee VARCHAR(1), filing VARCHAR(4), schedule VARCHAR(8), "
             "pageno VARCHAR(3), sequenceno VARCHAR(3), refno VARCHAR(20), date VARCHAR(15), "
             "refunddate VARCHAR(15), name VARCHAR(300), c_code VARCHAR(10), "
-            "donorcorp VARCHAR(300), donorfirst VARCHAR(250), donorlast VARCHAR(250), donormi VARCHAR(10), "
+            "donorcorp VARCHAR(300), donorfirst VARCHAR(250), donorlast VARCHAR(250), donormi VARCHAR(20), "
             "strno VARCHAR(8), "
             "strname VARCHAR(70), apartment VARCHAR(20), boroughcd VARCHAR(1), city VARCHAR(50), "
-            "state VARCHAR(2), zip VARCHAR(10), occupation VARCHAR(70), empname VARCHAR(100), "
-            "empstrno VARCHAR(8), empstrname VARCHAR(80), empcity VARCHAR(50), empstate VARCHAR(4), "
-            "amnt VARCHAR(15), matchamnt VARCHAR(15), prevamnt VARCHAR(15), pay_method VARCHAR(1), "
-            "intermno VARCHAR(15), intermname VARCHAR(100), intstrno VARCHAR(15), intstrnm VARCHAR(80), "
+            "state VARCHAR(15), zip VARCHAR(12), occupation VARCHAR(70), empname VARCHAR(200), "
+            "empstrno VARCHAR(15), empstrname VARCHAR(80), empcity VARCHAR(50), empstate VARCHAR(15), "
+            "amnt VARCHAR(15), matchamnt VARCHAR(15), prevamnt VARCHAR(15), pay_method VARCHAR(10), "
+            "intermno VARCHAR(15), intermname VARCHAR(100), intstrno VARCHAR(25), intstrnm VARCHAR(80), "
             "intaptno VARCHAR(20), intcity VARCHAR(50), intst VARCHAR(2), intzip VARCHAR(10), "
-            "intempname VARCHAR(100), intempstno VARCHAR(8), intempstnm VARCHAR(80), intempcity(50), "
+            "intempname VARCHAR(100), intempstno VARCHAR(8), intempstnm VARCHAR(80), intempcity VARCHAR(50), "
             "intempst VARCHAR(2), intoccupa VARCHAR(70), purposecd VARCHAR(10), exemptcd VARCHAR(10), "
-            "adjtypecd VARCHAR(10), rr-ind VARCHAR(10), seg-ind VARCHAR(10), int_c_code VARCHAR(10))")
+            "adjtypecd VARCHAR(10), rr_ind VARCHAR(10), seg_ind VARCHAR(10), int_c_code VARCHAR(10))")
     conn.commit()
 
     if not os.path.exists(city_contrib_file):
         print('city contributions file not found: %s' % city_contrib_file)
 
-    with open(city_contrib_file, 'rU') as csv_file:
+    with open(city_contrib_file, 'r+') as csv_file:
         c.copy_expert("COPY raw_table_city "
                     "(election, officecd, recipid, canclass, candfirst, "
                     "candlast, candmi, committee, "
@@ -164,13 +191,13 @@ def processFiles(state_recip_file, state_contrib_file, city_contrib_file):
 
     c.execute("INSERT INTO donors "
             "(first_name, middle_name, last_name, corp, street, "
-            " city, state, zip, type) "
+            " city, state, zip, type, source) "
             "SELECT DISTINCT "
             "LOWER(TRIM(donorfirst)), LOWER(TRIM(donormi)), LOWER(TRIM(donorlast)), "
             "LOWER(TRIM(name)), "
             "LOWER(CONCAT(TRIM(strno),' ',TRIM(strname),' ',TRIM(apartment))),LOWER(TRIM(city)), "
             "LOWER(TRIM(state)), LOWER(TRIM(zip)), "
-            "LOWER(TRIM(c_code))" "
+            "LOWER(TRIM(c_code)), 'NYCCFB' "
             "FROM raw_table_city")
     conn.commit()
 
@@ -189,17 +216,17 @@ def processFiles(state_recip_file, state_contrib_file, city_contrib_file):
             "(filer_id VARCHAR(6), name VARCHAR(150), "
             " compliance_type_desc VARCHAR(10), filer_type_desc VARCHAR(100), "
             " status VARCHAR(8), "
-            " committee_type VARCHAR(3), "
-            " office VARCHAR(3), district INTEGER, county VARCHAR(255), "
+            " committee_type VARCHAR(200), "
+            " office VARCHAR(50), district VARCHAR(15), county VARCHAR(255), "
             " municipality VARCHAR(100), treas_first_name VARCHAR(40), "
             " treas_middle_name VARCHAR(100), treas_last_name VARCHAR(40), street VARCHAR(70), "
-            " city VARCHAR(30), state VARCHAR(2), zip VARCHAR(11), "
+            " city VARCHAR(30), state VARCHAR(15), zip VARCHAR(11), "
             " candidate_id INTEGER)")
 
-    with open(state_recip_file, 'rU') as csv_file:
+    with open(state_recip_file, 'r+') as csv_file:
         c.copy_expert("COPY recipients "
                     "(filer_id, name, compliance_type_desc, filer_type_desc, "
-                    " status, committee_type, office, district, county, municipality "
+                    " status, committee_type, office, district, county, municipality, "
                     " treas_first_name, treas_middle_name, treas_last_name, street, "
                     " city, state, zip) "
                     "FROM STDIN CSV HEADER", csv_file)
@@ -212,72 +239,92 @@ def processFiles(state_recip_file, state_contrib_file, city_contrib_file):
             "SELECT DISTINCT "
             "LOWER(CONCAT('c_',TRIM(recipid))), "
             "LOWER(CONCAT(TRIM(candfirst),' ',TRIM(candmi),' ',TRIM(candlast))), "
-            "LOWER(TRIM(committee)), LOWER(TRIM(officecd)), 'new york city', "
+            "LOWER(TRIM(committee)), LOWER(TRIM(officecd)), 'new york city' "
             "FROM raw_table_city")
     conn.commit()
 
 
     print('creating contributions table...')
     c.execute("CREATE TABLE contributions "
-            "(contribution_id SERIAL PRIMARY KEY, uuid VARCHAR(50), "
-            " donor_id INT, recipient_id VARCHAR(6), trans_id VARCHAR(10), "
+            "(contribution_id SERIAL PRIMARY KEY, uuid VARCHAR(100), "
+            " donor_id INT, recipient_id VARCHAR(6), trans_id VARCHAR(100), "
             " date DATE, type VARCHAR(1), amount VARCHAR(23), "
             " contrib_code VARCHAR(6), "
             " receipt_type VARCHAR(25), "
-            " e_year VARCHAR(10), freport_id VARCHAR(1))")
+            " e_year VARCHAR(10), freport_id VARCHAR(10))")
 
 
     c.execute("INSERT INTO contributions (uuid, donor_id, recipient_id, "
             " trans_id, date, type, amount, contrib_code, receipt_type, "
             " e_year, freport_id ) "
-            "SELECT concat(filer_id,'-',filing_sched_abbrev,'-',trans_number,'-',replace(sched_date,'/','')) as uuid, donors.donor_id, filer_id as recipient_id, trans_number, "
-            " TO_DATE(TRIM(sched_date), 'MM/DD/YY'), "
+            "SELECT concat(filer_id,'-',filing_sched_abbrev,'-',trans_number,'-',replace(replace(sched_date,'/',''),'-','')) as uuid, donors.donor_id, "
+            " filer_id as recipient_id, trans_number, "
+            " TO_DATE(TRIM(sched_date), 'YYYY-MM-DD'), "
             " filing_sched_abbrev as type, org_amt as amount, "
-            " cntrbr_type_desc,  "
-            " CASE WHEN (cntrbr_type_desc IS NULL) "
-            " THEN 'CORP' "
-            " WHEN (cntrbr_type_desc = 'Individual') "
-            " THEN 'IND' "
-            " WHEN (cntrbr_type_desc = 'Partnership, including LLPs') "
-            " THEN 'PART' "
-            " WHEN (cntrbr_type_desc = 'Unitemized') "
-            " THEN 'UNITEM' "
-            " ELSE 'UNK' "
-            " END AS contrib_code, 'ny state' as receipt_type, "
-            " election_year, filing_abbrev "
+            "CASE WHEN cntrbr_type_desc = 'Candidate/Canditate Spouse' "
+            "THEN 'CAN' "
+            "WHEN cntrbr_type_desc = 'Individual' "
+            "THEN 'IND' "
+            "WHEN cntrbr_type_desc = 'Unitemized' "
+            "THEN 'UNITEM' "
+            "WHEN cntrbr_type_desc = 'Partnership, including LLPs' "
+            "THEN 'PART' "
+            "WHEN cntrbr_type_desc = 'Candidate Family Member' "
+            "THEN 'FAM' "
+            "WHEN cntrbr_type_desc = 'Political Committee' "
+            "THEN 'PAC' "
+            "WHEN cntrbr_type_desc = 'Political Action Committee (PAC)' "
+            "THEN 'PAC' "
+            "WHEN cntrbr_type_desc = 'Committee' "
+            "THEN 'COM' "
+            "WHEN cntrbr_type_desc = 'Other' "
+            "THEN 'OTHER' "
+            "WHEN cntrbr_type_desc = 'Sole Proprietorship' "
+            "THEN 'CORP' "
+            "WHEN cntrbr_type_desc = 'Corporation' "
+            "THEN 'CORP' "
+            "WHEN cntrbr_type_desc IS NULL "
+            "THEN 'CORP' "
+            "ELSE 'UNK' "
+            "END AS contrib_code, 'NYSBOE' as receipt_type, "
+            " election_year as e_year, filing_abbrev as freport_id "
             "FROM raw_table_state JOIN donors ON "
-            "((donors.first_name = LOWER(TRIM(raw_table.first_name)) AND "
-            "donors.last_name = LOWER(TRIM(raw_table.last_name))) OR "
-            "donors.corp = LOWER(TRIM(raw_table.corp))) AND "
-            "donors.street = LOWER(TRIM(raw_table.addr_1)) AND "
-            "donors.city = LOWER(TRIM(raw_table.city)) AND "
-            "donors.state = LOWER(TRIM(raw_table.state)) AND "
-            "donors.zip = LOWER(TRIM(raw_table.zip)) " 
-            "WHERE transaction_code IN ('A','B','C','D','E')")
+            "((donors.first_name = LOWER(TRIM(raw_table_state.flng_ent_first_name)) AND "
+            "donors.middle_name = LOWER(TRIM(raw_table_state.flng_ent_middle_name)) AND "
+            "donors.last_name = LOWER(TRIM(raw_table_state.flng_ent_last_name))) OR "
+            "donors.corp = LOWER(TRIM(raw_table_state.flng_ent_name))) AND "
+            "donors.street = LOWER(CONCAT(TRIM(raw_table_state.flng_ent_add1),' ',TRIM(raw_table_state.flng_ent_add2))) AND "
+            "donors.city = LOWER(TRIM(raw_table_state.flng_ent_city)) AND "
+            "donors.state = LOWER(TRIM(raw_table_state.flng_ent_state)) AND "
+            "donors.zip = LOWER(TRIM(raw_table_state.flng_ent_zip)) " 
+            "WHERE filing_sched_abbrev IN ('A','B','C','D','E')")
     conn.commit()
 
     print('adding city to the contributions table...')
     c.execute("INSERT INTO contributions (uuid, donor_id, recipient_id, "
             " trans_id, date, type, amount, contrib_code, receipt_type, "
             " e_year, freport_id ) "
-            "SELECT concat(recipid,'-',filing,'-',refno,'-',replace(date,'/','')) as uuid, donors.donor_id, recipid as recipient_id, refno, "
-            " TO_DATE(TRIM(date), 'MM/DD/YY'), "
-            " CASE WHEN (c_code IN ('IND','PART')) "
+            "SELECT concat(recipid,'-',filing,'-',refno,'-',replace(replace(date,'/',''),'-','')) as uuid, donors.donor_id, recipid AS recipient_id, "
+            " refno AS trans_id, "
+            " TO_DATE(TRIM(date), 'MM/DD/YY') AS date, "
+            " CASE WHEN c_code IN ('IND','PART') "
             " THEN 'A' "
-            " WHEN (c_code = 'CORP)"
+            " WHEN c_code = 'CORP' "
             " THEN 'B' "
-            " ELSE 'C' as type, amnt, "
-            " c_code,  "
-            " 'ny city' AS receipt_type, "
-            " election, filing "
+            " ELSE 'C' END as type, amnt AS amount, "
+            " c_code AS contrib_code,  "
+            " 'NYCCFB' AS receipt_type, "
+            " election AS e_year, filing AS freport_id "
             "FROM raw_table_city JOIN donors ON "
-            "((donors.first_name = LOWER(TRIM(raw_table.first_name)) AND "
-            "donors.last_name = LOWER(TRIM(raw_table.last_name))) OR "
-            "donors.corp = LOWER(TRIM(raw_table.corp))) AND "
-            "donors.street = LOWER(TRIM(raw_table.addr_1)) AND "
-            "donors.city = LOWER(TRIM(raw_table.city)) AND "
-            "donors.state = LOWER(TRIM(raw_table.state)) AND "
-            "donors.zip = LOWER(TRIM(raw_table.zip)) ")
+            "((donors.first_name = LOWER(TRIM(raw_table_city.donorfirst)) AND "
+            "donors.middle_name = LOWER(TRIM(raw_table_city.donormi)) AND "
+            "donors.last_name = LOWER(TRIM(raw_table_city.donorlast))) OR "
+            "donors.corp = LOWER(TRIM(raw_table_city.name))) AND "
+            "donors.street = LOWER(CONCAT(TRIM(raw_table_city.strno),' ',TRIM(raw_table_city.strname),' ',TRIM(raw_table_city.apartment))) AND "
+            "donors.city = LOWER(TRIM(raw_table_city.city)) AND "
+            "donors.state = LOWER(TRIM(raw_table_city.state)) AND "
+            "donors.zip = LOWER(TRIM(raw_table_city.zip)) AND "
+            "donors.source = 'NYCCFB'")
     conn.commit()
 
     print('creating indexes on contributions...')
@@ -327,5 +374,5 @@ if __name__ == '__main__':
     parser.add_argument('state_contrib_file', help='filings from state boe')
     parser.add_argument('city_contrib_file', help='filings from city boe')
     args=parser.parse_args()
-    processFiles(args.state_recip_file,args.state_contrib_file,city_contrib_file)
+    processFiles(args.state_recip_file,args.state_contrib_file,args.city_contrib_file)
     finish()

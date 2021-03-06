@@ -8,7 +8,7 @@ Note that as of 02/14/2021 the file format from the state BOE was not accurately
 address column between FLNG_ENT_ADD1 and FLNG_ENT_CITY that is not described in the documentation.
 Feels like they are actively trying to troll
 sample call:
-python3 fix_all_reports.py "../../../../../../WhoPays/NYSBOE_Data_02142021" "02142021_processed.csv"
+python3 fix_all_reports.py "../../NYSBOE_Data_02142021" "02142021_processed.csv"
 """
 import argparse, sys
 import pandas as pd
@@ -52,10 +52,37 @@ def compile_filings_state(filings_dir, outfile_name):
             main_df = pd.concat([main_df,df], ignore_index=True, sort=False)
             sys.stderr.close()
     sys.stderr=console_out
+    main_df['SCHED_DATE']=main_df['SCHED_DATE'].str.extract(r'(.{10})')
+    main_df['ORG_DATE']=main_df['ORG_DATE'].str.extract(r'(.{10})')
+    main_df = main_df[columns]
     main_df.to_csv(filings_dir+"/"+outfile_name, index=False)
-    main_df.head(200000).to_csv(filings_dir+"/"+outfile_name.split(".")[0]+"_cut.csv")
+    main_df.head(200000).to_csv(filings_dir+"/"+outfile_name.split(".")[0]+"_cut.csv", index=False)
     print("final length: "+str(main_df.shape[0]))
 
+def second_clean(filings_dir, outfile_name):
+    second_infile = open(filings_dir+"/"+outfile_name,'r', encoding="latin-1")
+    second_badfile = open(filings_dir+"/"+outfile_name.split(".")[0]+"_badlines.txt", 'w', encoding="latin-1")
+    second_fixedfile = open(filings_dir+"/"+outfile_name.split(".")[0]+"_round_2.csv", 'w', encoding="latin-1")
+    for i, line in enumerate(second_infile):
+        #if i in (1233448,1233449,1233453,1233454,1233455,1233456,1233457,1233458,1233460,1233461, 1233465,1233466,1233467,1233468):
+        if len(line.split(",")) < 45:
+            second_badfile.write(str(i)+","+line)
+        else:
+            second_fixedfile.write(line)
+    second_infile.close()
+    second_badfile.close()
+    second_fixedfile.close()
+    
+
+def fix_filers(filings_dir):
+    columns = ["filer_id","name",
+            "compliance_type_desc", "filer_type_desc",
+            "status", "committee_type", "office", "district", "county",
+            "municipality", "treas_first_name",
+            "treas_middle_name", "treas_last_name", "street",
+            "city", "state", "zip"]
+    df=pd.read_csv(filings_dir+'/'+'commcand/COMMCAND.csv',names=columns, header=None,encoding='latin1')
+    df.to_csv(filings_dir+'/'+'commcand/commcand_processed.csv', index=False)
 
 def finish():
     print("Finished")
@@ -67,4 +94,5 @@ if __name__ == '__main__':
     parser.add_argument('outfile_name', help = 'desired output name')
     args=parser.parse_args()
     compile_filings_state(str(args.filings_dir), str(args.outfile_name))
+    fix_filers(str(args.filings_dir))
     finish()
