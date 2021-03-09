@@ -67,7 +67,7 @@ def reload_contributions():
             "donors.state = LOWER(TRIM(o.flng_ent_state)) AND "
             "donors.zip = LOWER(TRIM(o.flng_ent_zip)) "
             "WHERE source = 'NYSBOE') as l ORDER BY uuid ")
-     conn.commit()
+    conn.commit()
     
 
     c.execute("INSERT INTO contributions (uuid, donor_id, recipient_id, "
