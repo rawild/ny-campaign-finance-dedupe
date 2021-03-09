@@ -34,7 +34,7 @@ def add_cluster_ids():
     print('copying over IND clusters to processed_donors...')
     c.execute("UPDATE processed_donors as p "
             " SET orig_cluster_id = canon_id "
-            " FROM entity_map as e"
+            " FROM entity_map_ind as e"
             " WHERE p.donor_id = e.donor_id")
     conn.commit()
     
@@ -47,7 +47,8 @@ def add_cluster_ids():
     
     print('updating empty orig_cluster_ids to be donor_id')
     c.execute("UPDATE processed_donors "
-            " SET orig_cluster_id = donor_id")
+            " SET orig_cluster_id = donor_id "
+            " WHERE orig_cluster_id IS NULL")
     conn.commit()
 
     print('copying orig_cluster_ids to cluster_id')

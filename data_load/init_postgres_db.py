@@ -204,7 +204,7 @@ def processFiles(state_recip_file, state_contrib_file, city_contrib_file):
 
     print('creating indexes on donors table...')
     c.execute("CREATE INDEX donors_donor_info ON donors "
-            "(last_name, first_name, corp, street, city, "
+            "(last_name, middle_name, first_name, corp, street, city, "
             " state, zip, type)")
     conn.commit()
 
