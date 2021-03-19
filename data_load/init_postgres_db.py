@@ -16,8 +16,7 @@ Tables created:
 sample usage:
 python init_postgres_db.py sample_filers.csv sample_filings.csv
 
-Source control: Updated March 05 2021 to reflect updated data structure from the NYSBOE (Jan 22, 2021)
-Also on March 05 2021 updated to include city data
+Source control: Updated March 19 2021 to reflect updated data structure from the NYSBOE (Jan 22, 2021) 
 """
 import csv
 import os
@@ -150,59 +149,7 @@ def processFiles(state_recip_file, state_contrib_file):
             "FROM raw_table_state "
             "WHERE filing_sched_abbrev IN ('A','B','C','D','E')")
     conn.commit()
-    '''
-	print('importing raw data from city csv...')
-    c.execute("CREATE TABLE raw_table_city "
-            "(election VARCHAR(4), officecd VARCHAR(5), recipid VARCHAR(5), canclass VARCHAR(3), "
-            "candfirst VARCHAR(100), candlast VARCHAR(100), candmi VARCHAR(1), "
-            "committee VARCHAR(1), filing VARCHAR(4), schedule VARCHAR(8), "
-            "pageno VARCHAR(3), sequenceno VARCHAR(3), refno VARCHAR(20), date VARCHAR(15), "
-            "refunddate VARCHAR(15), name VARCHAR(300), c_code VARCHAR(10), "
-            "donorcorp VARCHAR(300), donorfirst VARCHAR(250), donorlast VARCHAR(250), donormi VARCHAR(20), "
-            "strno VARCHAR(8), "
-            "strname VARCHAR(70), apartment VARCHAR(20), boroughcd VARCHAR(1), city VARCHAR(50), "
-            "state VARCHAR(15), zip VARCHAR(12), occupation VARCHAR(70), empname VARCHAR(200), "
-            "empstrno VARCHAR(15), empstrname VARCHAR(80), empcity VARCHAR(50), empstate VARCHAR(15), "
-            "amnt VARCHAR(15), matchamnt VARCHAR(15), prevamnt VARCHAR(15), pay_method VARCHAR(10), "
-            "intermno VARCHAR(15), intermname VARCHAR(100), intstrno VARCHAR(25), intstrnm VARCHAR(80), "
-            "intaptno VARCHAR(20), intcity VARCHAR(50), intst VARCHAR(2), intzip VARCHAR(10), "
-            "intempname VARCHAR(100), intempstno VARCHAR(8), intempstnm VARCHAR(80), intempcity VARCHAR(50), "
-            "intempst VARCHAR(2), intoccupa VARCHAR(70), purposecd VARCHAR(10), exemptcd VARCHAR(10), "
-            "adjtypecd VARCHAR(10), rr_ind VARCHAR(10), seg_ind VARCHAR(10), int_c_code VARCHAR(10))")
-    conn.commit()
-
-    if not os.path.exists(city_contrib_file):
-        print('city contributions file not found: %s' % city_contrib_file)
-
-    with open(city_contrib_file, 'r+') as csv_file:
-        c.copy_expert("COPY raw_table_city "
-                    "(election, officecd, recipid, canclass, candfirst, "
-                    "candlast, candmi, committee, "
-                    "filing, schedule, pageno, sequenceno, refno, date, refunddate, "
-                    "name, c_code, donorcorp, donorfirst, donorlast, donormi, "
-                    "strno, strname, apartment, boroughcd, city, state, "
-                    "zip, occupation, empname, empstrno, empstrname, empcity, empstate, "
-                    "amnt, matchamnt, prevamnt, pay_method, intermno, intermname, "
-                    "intstrno, intstrnm, intaptno, intcity, intst, intzip, intempname, "
-                    "intempstno, intempstnm, intempcity, intempst, intoccupa, purposecd, "
-                    "exemptcd, adjtypecd, rr_ind, seg_ind, int_c_code) "
-                    "FROM STDIN CSV HEADER", csv_file)
-    conn.commit()
-
-    print('adding to donors table...')
-
-    c.execute("INSERT INTO donors "
-            "(first_name, middle_name, last_name, corp, street, "
-            " city, state, zip, type, source) "
-            "SELECT DISTINCT "
-            "LOWER(TRIM(donorfirst)), LOWER(TRIM(donormi)), LOWER(TRIM(donorlast)), "
-            "LOWER(TRIM(name)), "
-            "LOWER(CONCAT(TRIM(strno),' ',TRIM(strname),' ',TRIM(apartment))),LOWER(TRIM(city)), "
-            "LOWER(TRIM(state)), LOWER(TRIM(zip)), "
-            "LOWER(TRIM(c_code)), 'NYCCFB' "
-            "FROM raw_table_city")
-    conn.commit()
-    '''
+    
 
     print('creating indexes on donors table...')
     c.execute("CREATE INDEX donors_donor_info ON donors "
@@ -527,34 +474,7 @@ def processFiles(state_recip_file, state_contrib_file):
                 "END "
                 "WHERE filing_sched_abbrev IN ('C','D','E')" +where)
         conn.commit()
-    '''
-    print('adding city to the contributions table...')
-    c.execute("INSERT INTO contributions (uuid, donor_id, recipient_id, "
-            " trans_id, date, type, amount, contrib_code, receipt_type, "
-            " e_year, freport_id ) "
-            "SELECT concat(recipid,'-',filing,'-',refno,'-',replace(replace(date,'/',''),'-','')) as uuid, donors.donor_id, recipid AS recipient_id, "
-            " refno AS trans_id, "
-            " TO_DATE(TRIM(date), 'MM/DD/YY') AS date, "
-            " CASE WHEN c_code IN ('IND','PART') "
-            " THEN 'A' "
-            " WHEN c_code = 'CORP' "
-            " THEN 'B' "
-            " ELSE 'C' END as type, amnt AS amount, "
-            " c_code AS contrib_code,  "
-            " 'NYCCFB' AS receipt_type, "
-            " election AS e_year, filing AS freport_id "
-            "FROM raw_table_city JOIN donors ON "
-            "((donors.first_name = LOWER(TRIM(raw_table_city.donorfirst)) AND "
-            "donors.middle_name = LOWER(TRIM(raw_table_city.donormi)) AND "
-            "donors.last_name = LOWER(TRIM(raw_table_city.donorlast))) OR "
-            "donors.corp = LOWER(TRIM(raw_table_city.name))) AND "
-            "donors.street = LOWER(CONCAT(TRIM(raw_table_city.strno),' ',TRIM(raw_table_city.strname),' ',TRIM(raw_table_city.apartment))) AND "
-            "donors.city = LOWER(TRIM(raw_table_city.city)) AND "
-            "donors.state = LOWER(TRIM(raw_table_city.state)) AND "
-            "donors.zip = LOWER(TRIM(raw_table_city.zip)) AND "
-            "donors.source = 'NYCCFB'")
-    conn.commit()
-    '''
+  
     print('creating indexes on contributions...')
     c.execute("CREATE INDEX donor_idx ON contributions (donor_id)")
     c.execute("CREATE INDEX recipient_idx ON contributions (recipient_id)")
@@ -587,7 +507,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='init_postgres_db')
     parser.add_argument('state_recip_file', help='filers from state boe')
     parser.add_argument('state_contrib_file', help='filings from state boe')
-   # parser.add_argument('city_contrib_file', help='filings from city boe')
     args=parser.parse_args()
     processFiles(args.state_recip_file,args.state_contrib_file)
     finish()
