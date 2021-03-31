@@ -57,6 +57,7 @@ def compile_filings_city(filings_dir,infile_names, outfile_name):
         main_df = pd.concat([main_df,df], ignore_index=True, sort=False)
     main_df = main_df[columns]
     main_df['DATE'] = main_df['DATE'].str.extract(r'(\d{1,2}\/\d{1,2}\/\d{4})')
+    main_df['REFUNDDATE'] = main_df['REFUNDDATE'].str.extract(r'(\d{1,2}\/\d{1,2}\/\d{4})')
     print(main_df.columns.values)
     main_df.to_csv(filings_dir+"/"+outfile_name, index=False)
     print('final length: '+str(main_df.shape[0]))

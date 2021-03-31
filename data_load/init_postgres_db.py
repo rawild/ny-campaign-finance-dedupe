@@ -7,7 +7,7 @@ contribution data stored by the NY State Board of Elections and uploads them int
 __Note:__ You will need to set the DATABASE_URL with the right connection info for your database
 
 Tables created:
-* raw_table - raw import of entire donations file
+* raw_table_state - raw import of entire donations file
 * donors - all distinct donors based on name and address
 * recipients - all distinct campaign contribution recipients - uploaded from entire filers file
 * contributions - contribution amounts tied to donor and recipients tables
@@ -180,18 +180,7 @@ def processFiles(state_recip_file, state_contrib_file):
                     " city, state, zip) "
                     "FROM STDIN CSV HEADER", csv_file)
     conn.commit()
-    '''
-    print('adding city to the recipients table...')
 
-    c.execute("INSERT INTO recipients "
-            "(filer_id, name, committee_type, office, municipality) "
-            "SELECT DISTINCT "
-            "LOWER(CONCAT('c_',TRIM(recipid))), "
-            "LOWER(CONCAT(TRIM(candfirst),' ',TRIM(candmi),' ',TRIM(candlast))), "
-            "LOWER(TRIM(committee)), LOWER(TRIM(officecd)), 'new york city' "
-            "FROM raw_table_city")
-    conn.commit()
-    '''
     print('nullifying empty strings in donors...')
     c.execute(
         "UPDATE donors "
@@ -492,7 +481,7 @@ def processFiles(state_recip_file, state_contrib_file):
             " LOWER(zip) AS zip, "
             " LOWER(state) AS state, "
             " LOWER(street) AS street, " 
-            " CAST((first_name IS NOT NULL) AS INTEGER) AS person "
+            " CAST(CAST((CASE type WHEN 'IND' THEN '1' WHEN 'FAM' THEN '1' ELSE '0' END) AS INTEGER) AS person "
             " FROM donors)")
     c.execute("CREATE INDEX processed_donor_idx ON processed_donors (donor_id)")
     conn.commit()
