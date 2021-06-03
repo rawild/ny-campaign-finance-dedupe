@@ -1,6 +1,9 @@
 # ny-campaign-finance-dedupe
 Deduplication Algorithm for NY State Donors
 
+White paper:
+https://academicworks.cuny.edu/cgi/viewcontent.cgi?article=5299&context=gc_etds
+
 With the library of dedupe.io: 
 https://github.com/dedupeio/dedupe
 
