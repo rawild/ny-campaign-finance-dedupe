@@ -8,7 +8,7 @@ Note that as of 02/14/2021 the file format from the state BOE was not accurately
 address column between FLNG_ENT_ADD1 and FLNG_ENT_CITY that is not described in the documentation.
 Feels like they are actively trying to troll
 sample call:
-python3 fix_all_reports.py "../../NYSBOE_Data_02142021" "02142021_processed.csv"
+python3 fix_all_reports.py "../../NYSBOE/NYSBOE_Data_02142021" "02142021_processed.csv"
 """
 import argparse, sys
 import pandas as pd

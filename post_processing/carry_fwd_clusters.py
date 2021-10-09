@@ -1,9 +1,5 @@
 '''
-The beginning of figuring out how to add in human edit to the machine matching
-
-usage:
-** fixed file must have the following column names: donor_id, orig_cluster_id, new_cluster_id
-python upload_fixed_clusters.py ../../path_to_fixed_file.csv
+Carry fwd the human edit to the matching when new data is loaded.
 '''
 import argparse, os
 import dj_database_url

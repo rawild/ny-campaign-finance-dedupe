@@ -164,7 +164,7 @@ def processFiles(state_recip_file, state_contrib_file):
     c.execute("CREATE TABLE recipients "
             "(filer_id VARCHAR(6), name VARCHAR(150), "
             " compliance_type_desc VARCHAR(10), filer_type_desc VARCHAR(100), "
-            " status VARCHAR(8), "
+            " status VARCHAR(12), "
             " committee_type VARCHAR(200), "
             " office VARCHAR(50), district VARCHAR(15), county VARCHAR(255), "
             " municipality VARCHAR(100), treas_first_name VARCHAR(40), "
@@ -468,7 +468,7 @@ def processFiles(state_recip_file, state_contrib_file):
     c.execute("CREATE INDEX donor_idx ON contributions (donor_id)")
     c.execute("CREATE INDEX recipient_idx ON contributions (recipient_id)")
     conn.commit()
-
+    
 
     print('creating processed_donors...')
     c.execute("CREATE TABLE processed_donors AS "
@@ -481,7 +481,7 @@ def processFiles(state_recip_file, state_contrib_file):
             " LOWER(zip) AS zip, "
             " LOWER(state) AS state, "
             " LOWER(street) AS street, " 
-            " CAST(CAST((CASE type WHEN 'IND' THEN '1' WHEN 'FAM' THEN '1' ELSE '0' END) AS INTEGER) AS person "
+            " CAST((CASE type WHEN 'IND' THEN '1' WHEN 'FAM' THEN '1' ELSE '0' END) AS INTEGER) AS person"
             " FROM donors)")
     c.execute("CREATE INDEX processed_donor_idx ON processed_donors (donor_id)")
     conn.commit()
