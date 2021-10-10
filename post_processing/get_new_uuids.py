@@ -1,5 +1,8 @@
 '''
 Carry fwd the human edit to the matching when new data is loaded.
+
+Usage:
+
 '''
 import argparse, os
 import dj_database_url
@@ -75,7 +78,7 @@ def get_new_uuids(new_filer_ids,uuids_for_fixing):
             new_uuids_query_1 = "SELECT uuid FROM contributions as c,processed_donors as p "\
             "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
             "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(row["amount"])+" "\
-            "AND c.donor_id = p.donor_id AND name = '"+str(row["name"]).replace("'","\'")+"'"
+            "AND c.donor_id = p.donor_id AND name = '"+str(row["name"]).replace("'","''")+"'"
             c.execute(new_uuids_query_1)
             new_uuids_result = c.fetchall()
             if len(new_uuids_result) != 1:
