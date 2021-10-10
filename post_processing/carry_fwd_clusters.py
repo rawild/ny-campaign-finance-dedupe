@@ -50,8 +50,6 @@ def get_new_uuids(new_filer_ids,uuids_for_fixing):
         if index % 100 == 0:
             print(index)
         uuid = row['uuid']
-        if pd.isna(uuid):
-            continue
         uuid_parts = str(uuid).split("-")
         if len(uuid_parts) < 4:
             df.at[index,'bad_uuid'] = 1
@@ -68,12 +66,9 @@ def get_new_uuids(new_filer_ids,uuids_for_fixing):
         new_filer_id = new_id_record[0]
         new_uuid_mask = str(new_filer_id)+"-"+str(uuid_parts[1])+"-%-"+year+month+day
         #print("new uuid mask= ",new_uuid_mask)
-        amount = row["amount"]
-        if pd.isna(amount):
-            amount = "NULL"
         new_uuids_query = "SELECT uuid FROM contributions as c,processed_donors as p "\
             "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
-            "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(amount)+" "\
+            "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(row["amount"])+" "\
             "AND c.donor_id = p.donor_id "
         c.execute(new_uuids_query)
         #print("getting new_uuid")
@@ -82,7 +77,7 @@ def get_new_uuids(new_filer_ids,uuids_for_fixing):
         if len(new_uuids_result) != 1:
             new_uuids_query_1 = "SELECT uuid FROM contributions as c,processed_donors as p "\
             "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
-            "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(amount)+" "\
+            "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(row["amount"])+" "\
             "AND c.donor_id = p.donor_id AND name = '"+str(row["name"]).replace("'","''")+"'"
             c.execute(new_uuids_query_1)
             new_uuids_result = c.fetchall()
