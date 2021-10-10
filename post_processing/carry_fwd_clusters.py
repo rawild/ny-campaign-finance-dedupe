@@ -76,30 +76,30 @@ def carry_fwd_clusters(golden_record, new_uuids):
         query_for_new_golden_uuid = "SELECT new_uuid FROM tmp_m WHERE old_uuid = '"+old_golden_uuid+"'"
         c.execute(query_for_new_golden_uuid)
         new_golden_record = c.fetchone()
-        new_golden_uuid = new_golden_record[0]
-        if pd.isna(new_golden_uuid):
+        if pd.isna(new_golden_record):
             error_dict['bad_uuid'].append(row['uuid'])
             error_dict['error'].append('no new golden found')
             continue
+        new_golden_uuid = new_golden_record[0]
         #print("golden_cluster_id_query")
         query_for_cluster_id = "SELECT cluster_id from contributions as c, processed_donors as d WHERE uuid = '"+new_golden_uuid+"'"\
         " AND c.donor_id = d.donor_id"
         c.execute(query_for_cluster_id)
         cluster_id_record = c.fetchone()
-        cluster_id = cluster_id_record[0]
-        if pd.isna(cluster_id):
+        if pd.isna(cluster_id_record):
             error_dict['bad_uuid'].append(row['uuid'])
             error_dict['error'].append('no cluster_id found')
             continue
+        cluster_id = cluster_id_record[0]
         #print("donor_id_query")
         query_for_donor_id = "SELECT donor_id from contributions as c WHERE uuid = '"+ row['new_uuid']+"'"
         c.execute(query_for_donor_id)
         donor_id_record = c.fetchone()
-        donor_id = donor_id_record[0]
-        if pd.isna(donor_id):
+        if pd.isna(donor_id_record):
             error_dict['bad_uuid'].append(row['uuid'])
             error_dict['error'].append('no donor id found')
             continue
+        donor_id = donor_id_record[0]
         #print("update cluster id query")
         update_cluster_id = "UPDATE processed_donors SET cluster_id = '"+str(cluster_id)+"'" \
         " WHERE donor_id = '"+ str(donor_id) +"'"
