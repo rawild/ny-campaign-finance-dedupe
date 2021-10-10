@@ -72,6 +72,10 @@ def carry_fwd_clusters(golden_record, new_uuids):
             error_dict['error'].append('no old golden found')
             continue
         old_golden_uuid = old_golden_record[0]
+        if pd.isna(old_golden_uuid):
+            error_dict['bad_uuid'].append(row['uuid'])
+            error_dict['error'].append('no old golden uuid found')
+            continue
         #print("new_golden_uuid_query")
         query_for_new_golden_uuid = "SELECT new_uuid FROM tmp_m WHERE old_uuid = '"+old_golden_uuid+"'"
         c.execute(query_for_new_golden_uuid)
