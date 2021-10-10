@@ -11,10 +11,10 @@ import psycopg2.extras
 import pandas as pd
 
 
-def get_new_uuids(new_filer_ids,uuids_for_fixing):
-    print('getting new filer ids csv for processing...')
-    df = pd.read_csv(new_filer_ids, dtype={0:'int',1:'str',}, encoding='latin-1')
-    df.to_csv('new_filer_ids.csv', index=False)
+def carry_fwd_clusters(golden_record, new_uuids):
+    print('getting golden record csv for processing...')
+    df = pd.read_csv(golden_record, dtype={0:'str',2:'str'}, encoding='latin-1')
+    df.to_csv('conversion_uuids_old.csv', index=False)
     
     db_conf = dj_database_url.config()
     if not db_conf:
@@ -34,67 +34,87 @@ def get_new_uuids(new_filer_ids,uuids_for_fixing):
     print('creating temp table...')
 
     c.execute("CREATE TEMP TABLE tmp_d"
-             "(new_filer_id INTEGER, old_filer_id VARCHAR(12)) ")
+             "(old_uuid VARCHAR(200), old_golden_uuid VARCHAR(200)) ")
     conn.commit()
-    with open('new_filer_ids.csv', 'r+') as csv_file:
+    with open('conversion_uuids_old.csv', 'r+') as csv_file:
         c.copy_expert("COPY tmp_d "
-        "(new_filer_id, old_filer_id) "
+        "(old_uuid, old_golden_uuid) "
         "FROM STDIN CSV HEADER", csv_file)
     conn.commit()
     
-    print('getting uuid csv for processing...')
-    df = pd.read_csv(uuids_for_fixing, dtype={0:'str',1:'str',2:'float',3:'int',4:'int'}, encoding='latin-1')
-    df.to_csv('uuids_for_fixing.csv', index=False)
-    
+    print('getting new_uuids csv for processing...')
+    df = pd.read_csv(new_uuids, dtype={0:'str',1:'str',2:'float',3:'int',4:'int',5:'str'}, encoding='latin-1')
+    df = df[['uuid','new_uuid']]
+    df.to_csv('new_uuids_cut.csv', index = False)
+
+    print('creating temp table...')
+
+    c.execute("CREATE TEMP TABLE tmp_m"
+             "(old_uuid VARCHAR(200), new_uuid VARCHAR(200)) ")
+    conn.commit()
+    with open('new_uuids_cut.csv', 'r+') as csv_file:
+        c.copy_expert("COPY tmp_m "
+        "(old_uuid, new_uuid) "
+        "FROM STDIN CSV HEADER", csv_file)
+    conn.commit()
+
+    error_dict = {'bad_uuid':[],'error': []}
+
     for index,row in df.iterrows():
-        if index % 100 == 0:
+        if index % 10 == 0:
             print(index)
-        uuid = row['uuid']
-        uuid_parts = str(uuid).split("-")
-        if len(uuid_parts) < 4:
-            df.at[index,'bad_uuid'] = 1
+        #print("old_golden_uuid_query")
+        query_for_old_golden_uuid = "SELECT old_golden_uuid FROM tmp_d WHERE old_uuid = '"+row['uuid']+"'"
+        c.execute(query_for_old_golden_uuid)
+        old_golden_record = c.fetchone()
+        old_golden_uuid = old_golden_record[0]
+        if pd.isna(old_golden_uuid):
+            error_dict['bad_uuid'].append(row['uuid'])
+            error_dict['error'].append('no old golden found')
             continue
-        date = str(uuid_parts[3])
-        month = date[0:2]
-        day = date[2:4]
-        year = date[4:]
-        old_filer_id = uuid_parts[0]
-        new_filer_id_query = "SELECT new_filer_id FROM tmp_d WHERE old_filer_id = '" + old_filer_id + "'"
-        c.execute(new_filer_id_query)
-        #print("getting new_filer_id")
-        new_id_record = c.fetchone()
-        new_filer_id = new_id_record[0]
-        new_uuid_mask = str(new_filer_id)+"-"+str(uuid_parts[1])+"-%-"+year+month+day
-        #print("new uuid mask= ",new_uuid_mask)
-        new_uuids_query = "SELECT uuid FROM contributions as c,processed_donors as p "\
-            "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
-            "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(row["amount"])+" "\
-            "AND c.donor_id = p.donor_id "
-        c.execute(new_uuids_query)
-        #print("getting new_uuid")
-        new_uuids_result = c.fetchall()
-        #print("length new_uuids= ", len(new_uuids_result))
-        if len(new_uuids_result) != 1:
-            new_uuids_query_1 = "SELECT uuid FROM contributions as c,processed_donors as p "\
-            "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
-            "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(row["amount"])+" "\
-            "AND c.donor_id = p.donor_id AND name = '"+str(row["name"]).replace("'","''")+"'"
-            c.execute(new_uuids_query_1)
-            new_uuids_result = c.fetchall()
-            if len(new_uuids_result) != 1:
-                df.at[index,'bad_result'] = len(new_uuids_result)
-                continue
+        #print("new_golden_uuid_query")
+        query_for_new_golden_uuid = "SELECT new_uuid FROM tmp_m WHERE old_uuid = '"+old_golden_uuid+"'"
+        c.execute(query_for_new_golden_uuid)
+        new_golden_record = c.fetchone()
+        new_golden_uuid = new_golden_record[0]
+        if pd.isna(new_golden_uuid):
+            error_dict['bad_uuid'].append(row['uuid'])
+            error_dict['error'].append('no new golden found')
+            continue
+        #print("golden_cluster_id_query")
+        query_for_cluster_id = "SELECT cluster_id from contributions as c, processed_donors as d WHERE uuid = '"+new_golden_uuid+"'"\
+        " AND c.donor_id = d.donor_id"
+        c.execute(query_for_cluster_id)
+        cluster_id_record = c.fetchone()
+        cluster_id = cluster_id_record[0]
+        if pd.isna(cluster_id):
+            error_dict['bad_uuid'].append(row['uuid'])
+            error_dict['error'].append('no cluster_id found')
+            continue
+        #print("donor_id_query")
+        query_for_donor_id = "SELECT donor_id from contributions as c WHERE uuid = '"+ row['new_uuid']+"'"
+        c.execute(query_for_donor_id)
+        donor_id_record = c.fetchone()
+        donor_id = donor_id_record[0]
+        if pd.isna(donor_id):
+            error_dict['bad_uuid'].append(row['uuid'])
+            error_dict['error'].append('no donor id found')
+            continue
+        #print("update cluster id query")
+        update_cluster_id = "UPDATE processed_donors SET cluster_id = '"+str(cluster_id)+"'" \
+        " WHERE donor_id = '"+ str(donor_id) +"'"
+        c.execute(update_cluster_id)
+        conn.commit()
 
-        for result in new_uuids_result:
-            #print("uuid =", result[0])
-            df.at[index,'new_uuid'] = result[0]
-
-    df.to_csv('uuids_with_new_uuids.csv')
     c.close()
     conn.close()
 
-    os.remove('new_filer_ids.csv')
-    os.remove('uuids_for_fixing.csv')
+    df_error = pd.DataFrame(data=error_dict)
+    df_error.to_csv(new_uuids.split("/")[-1].split(".")[-2]+'_errored_records.csv', index=False)
+
+    os.remove('conversion_uuids_old.csv')
+    os.remove('new_uuids_cut.csv')
+    
 
 def finish():
     print("Finished")
@@ -104,5 +124,5 @@ if __name__ == '__main__':
     parser.add_argument('new_filer_ids', help='file with new filer ids')
     parser.add_argument('uuids_for_fixing', help='file of uuids to fix')
     args=parser.parse_args()
-    get_new_uuids(args.new_filer_ids,args.uuids_for_fixing)
+    carry_fwd_clusters(args.new_filer_ids,args.uuids_for_fixing)
     finish()
