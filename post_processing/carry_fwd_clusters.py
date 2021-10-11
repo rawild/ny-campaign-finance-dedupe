@@ -64,6 +64,8 @@ def carry_fwd_clusters(golden_record, new_uuids):
         if index % 10 == 0:
             print(index)
         #print("old_golden_uuid_query")
+        if type(row['uuid']) is not str :
+            continue
         query_for_old_golden_uuid = "SELECT old_golden_uuid FROM tmp_d WHERE old_uuid = '"+row['uuid']+"'"
         c.execute(query_for_old_golden_uuid)
         old_golden_record = c.fetchone()

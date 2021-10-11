@@ -2,6 +2,7 @@
 Carry fwd the human edit to the matching when new data is loaded.
 
 Usage:
+python3 get_new_uuids.py ../../carry_fwd/new_to_old_filer_id_map.csv ../../carry_fwd/uuids_for_fixing_part_1.csv 
 
 '''
 import argparse, os
@@ -79,16 +80,33 @@ def get_new_uuids(new_filer_ids,uuids_for_fixing):
         #print("getting new_uuid")
         new_uuids_result = c.fetchall()
         #print("length new_uuids= ", len(new_uuids_result))
+        name = str(row["name"]).replace("'","").replace(",","")
+        name_parts = name.split(" ")
+        name_mask = name_parts[0]+"%"+name_parts[-1]
         if len(new_uuids_result) != 1:
             new_uuids_query_1 = "SELECT uuid FROM contributions as c,processed_donors as p "\
             "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
             "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(amount)+" "\
-            "AND c.donor_id = p.donor_id AND name = '"+str(row["name"]).replace("'","''")+"'"
+            "AND c.donor_id = p.donor_id AND name LIKE '"+name_mask+"'"
             c.execute(new_uuids_query_1)
             new_uuids_result = c.fetchall()
             if len(new_uuids_result) != 1:
-                df.at[index,'bad_result'] = len(new_uuids_result)
-                continue
+                new_uuids_query_2 = "SELECT uuid FROM contributions as c,processed_donors as p "\
+                "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
+                "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(round(amount,1))+" "\
+                "AND c.donor_id = p.donor_id AND name LIKE '"+name_mask+"'"
+                c.execute(new_uuids_query_2)
+                new_uuids_result = c.fetchall()
+                if len(new_uuids_result) != 1:
+                    new_uuids_query_3 = "SELECT uuid FROM contributions as c,processed_donors as p "\
+                    "WHERE recipient_id = '"+str(new_filer_id)+"' AND type = '"+str(uuid_parts[1])+"' " \
+                    "AND date = '"+year+"-"+month+"-"+day+"'AND CAST(amount AS double precision) = "+str(round(amount))+" "\
+                    "AND c.donor_id = p.donor_id AND name LIKE '"+name_mask+"'"
+                    c.execute(new_uuids_query_3)
+                    new_uuids_result = c.fetchall()
+                    if len(new_uuids_result) != 1:
+                    df.at[index,'bad_result'] = len(new_uuids_result)
+                    continue
 
         for result in new_uuids_result:
             #print("uuid =", result[0])
