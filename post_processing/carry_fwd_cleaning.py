@@ -38,7 +38,7 @@ def carry_fwd_cluster_sector(second_db):
                             port=db_conf_new['PORT'])
     
     c_new = conn_new.cursor()
-    try:
+    '''try:
         print('adding sector class and note columns')
         c_new.execute("ALTER TABLE processed_donors"
             " ADD COLUMN sector VARCHAR(50),"
@@ -48,6 +48,7 @@ def carry_fwd_cluster_sector(second_db):
         conn_new.commit()
     except:
         print('exception adding columns')
+        c_new = conn_new.cursor()'''
 
     print('getting changed cluster ids...')
     tmp_filename = "temp_old_cluster_file.csv"
@@ -58,61 +59,70 @@ def carry_fwd_cluster_sector(second_db):
         " contributions as cc, processed_donors as pp"
         " WHERE ch.cluster_id = pp.donor_id AND cc.donor_id = pp.donor_id) TO STDOUT WITH CSV HEADER",file_out)
     
+    print('creating temp cluster table...')
+    c_new.execute("CREATE TEMP TABLE tmp_u"
+             " (uuid VARCHAR(200), golden_uuid VARCHAR(200), sector VARCHAR(50),"
+             " note VARCHAR(1000), class VARCHAR(50), new_cluster_id INTEGER, donor_id INTEGER) ")
+    conn_new.commit()
+    with open(tmp_filename, 'r+') as csv_file:
+        c_new.copy_expert("COPY tmp_u "
+        "(uuid, golden_uuid, sector, note, class) "
+        "FROM STDIN CSV HEADER", csv_file)
+    conn_new.commit()
+    
+    print('Updating temp with cluster_id')
+    c_new.execute("UPDATE tmp_u as u SET new_cluster_id = p.cluster_id "
+        " FROM contributions as c, processed_donors as p "
+        " WHERE p.donor_id = c.donor_id AND c.uuid = u.golden_uuid")
+    conn_new.commit()
+    
+    print('Updating temp with donor_id')
+    c_new.execute("UPDATE tmp_u as u SET donor_id = p.donor_id "
+        " FROM contributions as c, processed_donors as p "
+        " WHERE p.donor_id = c.donor_id and c.uuid = u.uuid")
+    conn_new.commit()
 
-    print('iterating through file and updating cluster ids...')
-
-    df= pd.read_csv(tmp_filename)
-    for index,row in df.iterrows():
-        if index % 100 == 0:
-            print(index)
-        new_cluster_id_query = "SELECT cluster_id from contributions as c, processed_donors as p WHERE p.donor_id = c.donor_id and uuid = '"+row['golden_uuid']+"'"
-        print(new_cluster_id_query)
-        c_new.execute(new_cluster_id_query)
-        new_cluster_id_record = c_new.fetchone()
-        if pd.isna(new_cluster_id_record):
-            continue
-        new_cluster_id = new_cluster_id_record[0]
-        print(new_cluster_id)
-        donor_id_query = "SELECT donor_id from contributions as c, processed_donors as p WHERE p.donor_id = c.donor_id and uuid = '"+row['uuid']+"'"
-        c_new.execute(donor_id_query)
-        donor_id_record = c_new.fetchone()
-        if pd.isna(donor_id_record):
-            continue
-        donor_id = donor_id_record[0]
-        print(donor_id)
-        c_new.execute( "UPDATE processed_donors as p"
-            " SET cluster_id = "+new_cluster_id+
-            " class = CASE WHEN p.class IS NULL THEN '"+row['class']+"' ELSE p.class END, "
-            " note = CASE WHEN p.note IS NULL THEN '"+row['note']+"' ELSE p.note END,"
-            " sector = CASE WHEN p.sector IS NULL THEN '"+row['sector']+"' ELSE p.sector END"
-            " WHERE p.donor_id="+donor_id)
-        conn_new.commit()
-        print("finished round")
+    print('Updating processed_donor with cluster_ids')
+    c_new.execute("UPDATE processed_donors as p "
+        " SET cluster_id = u.new_cluster_id, "
+        " class = CASE WHEN p.class IS NULL THEN u.class ELSE p.class END, " 
+        " note = CASE WHEN p.note IS NULL THEN u.note ELSE p.note END," 
+        " sector = CASE WHEN p.sector IS NULL THEN u.sector ELSE p.sector END "
+        " FROM tmp_u as u " 
+        " WHERE p.donor_id = u.donor_id ")
+    conn_new.commit()
 
     print('getting sector info...')
     tmp_filename_1 = "temp_old_sector_file.csv"
     with open(tmp_filename_1, 'w') as file_out:
-        c.copy_expert("COPY (SELECT uuid, sector, note, class FROM contributions as c, processed_donors as d "
+        c_new.copy_expert("COPY (SELECT uuid, sector, note, class FROM contributions as c, processed_donors as d "
     " WHERE d.sector IS NOT null and c.donor_id = d.donor_id) TO STDOUT WITH CSV HEADER",file_out)
 
-    print('iterating through file and updating sector info ...')
-    
-    df= pd.read_csv(tmp_filename_1)
-    for index,row in df.iterrows():
-        if index % 100 == 0:
-            print(index)
-        donor_id_query = "SELECT donor_id from contributions as c, processed_donors as p WHERE p.donor_id = c.donor_id and uuid = '"+row['uuid']+"'"
-        c_new.execute(donor_id_query)
-        donor_id_record = c_new.fetchone()
-        if pd.isna(donor_id_record):
-            continue
-        donor_id = donor_id_record[0]
-        c_new.execute( "UPDATE processed_donors as p"
-            " SET class = CASE WHEN p.class IS NULL THEN '"+row['class']+"' ELSE p.class END, "
-            " note = CASE WHEN p.note IS NULL THEN '"+row['note']+"' ELSE p.note END,"
-            " sector = CASE WHEN p.sector IS NULL THEN '"+row['sector']+"' ELSE p.sector END"
-            " WHERE p.donor_id="+donor_id)
-        conn_new.commit()
+    print('creating temp sector table...')
+    c_new.execute("CREATE TEMP TABLE tmp_s"
+             " (uuid VARCHAR(200), sector VARCHAR(50),"
+             " note VARCHAR(1000), class VARCHAR(50), donor_id INTEGER) ")
+    conn_new.commit()
+    with open(tmp_filename_1, 'r+') as csv_file:
+        c_new.copy_expert("COPY tmp_s "
+        "(uuid, sector, note, class) "
+        "FROM STDIN CSV HEADER", csv_file)
+    conn_new.commit()
+
+    print('Updating temp sector table with donor_id')
+    c_new.execute("UPDATE tmp_s as s SET donor_id = p.donor_id "
+        " FROM contributions as c, processed_donors as p "
+        " WHERE p.donor_id = c.donor_id and c.uuid = s.uuid")
+    conn_new.commit()
+
+    print('Updating processed_donor with sectors')
+    c_new.execute("UPDATE processed_donors as p "
+        " SET class = CASE WHEN p.class IS NULL THEN s.class ELSE p.class END, " 
+        " note = CASE WHEN p.note IS NULL THEN s.note ELSE p.note END," 
+        " sector = CASE WHEN p.sector IS NULL THEN s.sector ELSE p.sector END "
+        " FROM tmp_s as s " 
+        " WHERE p.donor_id = s.donor_id ")
+    conn_new.commit()
 
     c.close()
     conn.close()
