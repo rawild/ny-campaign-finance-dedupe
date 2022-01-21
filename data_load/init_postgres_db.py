@@ -52,7 +52,6 @@ def processFiles(state_recip_file, state_contrib_file):
 
     
     c.execute("DROP TABLE IF EXISTS raw_table_state")
-    c.execute("DROP TABLE IF EXISTS raw_table_city")
     c.execute("DROP TABLE IF EXISTS donors")
     c.execute("DROP TABLE IF EXISTS recipients")
     c.execute("DROP TABLE IF EXISTS contributions")
@@ -70,7 +69,7 @@ def processFiles(state_recip_file, state_contrib_file):
             " receipt_type_desc VARCHAR(80), receipt_type_code VARCHAR(80), purpose_code_desc VARCHAR(80), "
             " r_subscontractor VARCHAR(1), flng_ent_name VARCHAR(250), flng_ent_first_name VARCHAR(100), "
             " flng_ent_middle_name VARCHAR(50), flng_ent_last_name VARCHAR(100), flng_ent_add1 VARCHAR(100), "
-            " flng_ent_city VARCHAR(50), flng_ent_state VARCHAR(20), flng_ent_zip VARCHAR(30), "
+            " flng_ent_city VARCHAR(50), flng_ent_state VARCHAR(40), flng_ent_zip VARCHAR(30), "
             " flng_ent_country VARCHAR(30), payment_type_desc VARCHAR(80), pay_number VARCHAR(30), "
             " owed_amt VARCHAR(20), org_amt VARCHAR(50), loan_other_desc VARCHAR(80), "
             " trans_explntn VARCHAR(300), r_itemized VARCHAR(4), r_liability VARCHAR(1), "
@@ -105,7 +104,7 @@ def processFiles(state_recip_file, state_contrib_file):
             " first_name VARCHAR(100), middle_name VARCHAR(50), last_name VARCHAR(100), "
             " corp VARCHAR(250), "
             " street VARCHAR(70), "
-            " city VARCHAR(50), state VARCHAR(15), "
+            " city VARCHAR(50), state VARCHAR(50), "
             " zip VARCHAR(20), type VARCHAR(10), source VARCHAR(6))")
 
     c.execute("INSERT INTO donors "
@@ -180,6 +179,10 @@ def processFiles(state_recip_file, state_contrib_file):
                     " city, state, zip) "
                     "FROM STDIN CSV HEADER", csv_file)
     conn.commit()
+    print('making recipients name lower...')
+    c.execute(
+            "UPDATE recipients "
+            "SET name = LOWER(name) " )
 
     print('nullifying empty strings in donors...')
     c.execute(
@@ -200,7 +203,7 @@ def processFiles(state_recip_file, state_contrib_file):
     c.execute("CREATE TABLE contributions "
             "(contribution_id SERIAL PRIMARY KEY, uuid VARCHAR(100), "
             " donor_id INT, recipient_id VARCHAR(6), trans_id VARCHAR(100), "
-            " date DATE, type VARCHAR(1), amount VARCHAR(30), "
+            " date DATE, type VARCHAR(1), amount DOUBLE PRECISION, "
             " contrib_code VARCHAR(6), "
             " receipt_type VARCHAR(25), "
             " purpose_code VARCHAR(80), "
@@ -221,7 +224,7 @@ def processFiles(state_recip_file, state_contrib_file):
                 " SELECT concat(filer_id,'-',filing_sched_abbrev,'-',trans_number,'-',replace(replace(sched_date,'/',''),'-','')) as uuid, donors.donor_id, "
                 " filer_id as recipient_id, trans_number, "
                 " TO_DATE(TRIM(sched_date), 'YYYY-MM-DD'), "
-                " filing_sched_abbrev as type, org_amt as amount, "
+                " filing_sched_abbrev as type, CAST(org_amt AS double precision) AS amount, "
                 "CASE WHEN cntrbr_type_desc = 'Candidate/Canditate Spouse' "
                 "THEN 'CAN' "
                 "WHEN cntrbr_type_desc = 'Individual' "
@@ -307,7 +310,7 @@ def processFiles(state_recip_file, state_contrib_file):
                 " SELECT concat(filer_id,'-',filing_sched_abbrev,'-',trans_number,'-',replace(replace(sched_date,'/',''),'-','')) as uuid, donors.donor_id, "
                 " filer_id as recipient_id, trans_number, "
                 " TO_DATE(TRIM(sched_date), 'YYYY-MM-DD'), "
-                " filing_sched_abbrev as type, org_amt as amount, "
+                " filing_sched_abbrev as type, CAST(org_amt AS DOUBLE PRECISION) as amount, "
                 "CASE WHEN cntrbr_type_desc = 'Candidate/Canditate Spouse' "
                 "THEN 'CAN' "
                 "WHEN cntrbr_type_desc = 'Individual' "
@@ -393,7 +396,7 @@ def processFiles(state_recip_file, state_contrib_file):
                 " SELECT concat(filer_id,'-',filing_sched_abbrev,'-',trans_number,'-',replace(replace(sched_date,'/',''),'-','')) as uuid, donors.donor_id, "
                 " filer_id as recipient_id, trans_number, "
                 " TO_DATE(TRIM(sched_date), 'YYYY-MM-DD'), "
-                " filing_sched_abbrev as type, org_amt as amount, "
+                " filing_sched_abbrev as type, CAST(org_amt AS DOUBLE PRECISION) as amount, "
                 "CASE WHEN cntrbr_type_desc = 'Candidate/Canditate Spouse' "
                 "THEN 'CAN' "
                 "WHEN cntrbr_type_desc = 'Individual' "

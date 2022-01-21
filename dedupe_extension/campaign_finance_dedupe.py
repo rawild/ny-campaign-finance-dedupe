@@ -119,6 +119,11 @@ def cluster_ids(clustered_dupes):
 def run_dedupe(settings_file, training_file, type):
     start_time = time.time()
     print("dedupe file ",dedupe.__file__)
+    print("dedupe path ",dedupe.__path__)
+    print("dedupe name ",dedupe.__name__)
+    print("dedupe spec ",dedupe.__spec__)
+    print("dedupe doc ",dedupe.__doc__)
+    print("dedupe loader ",dedupe.__loader__)
     # Set the database connection from environment variable using
     # [dj_database_url](https://github.com/kennethreitz/dj-database-url)
     # For example:
@@ -532,6 +537,6 @@ if __name__ == '__main__':
         settings_file = 'settings_'+ type + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime())
     training_file = 'training_'+ type + '_' + time.strftime('%d_%m_%y_%H%M', time.localtime())+'.json' 
 
-    
+
     # ## Run
     run_dedupe(settings_file, training_file, type)

@@ -1,8 +1,7 @@
 import dj_database_url
 import psycopg2
 import psycopg2.extras
-import argparse, os
-import pandas as pd
+import argparse
 
 
 def add_candidates(candidates_file):
@@ -23,11 +22,11 @@ def add_candidates(candidates_file):
     c = conn.cursor()
 
 
-    #print('creating temp table...')
-    #c.execute("CREATE TABLE candidates "
-    #         "(candidate_id SERIAL PRIMARY KEY, first_name VARCHAR(50), middle_name VARCHAR(50), "
-    #         "last_name VARCHAR(50), district INTEGER, party VARCHAR(50), office VARCHAR(50)) ")
-    #conn.commit()
+    print('creating  table...')
+    c.execute("CREATE TABLE candidates "
+             "(candidate_id SERIAL PRIMARY KEY, first_name VARCHAR(50), middle_name VARCHAR(50), "
+             "last_name VARCHAR(50), district INTEGER, party VARCHAR(50), office VARCHAR(50)) ")
+    conn.commit()
 
     with open(candidates_file, 'r+') as csv_file:
         c.copy_expert("COPY candidates "
