@@ -5,7 +5,7 @@ import argparse, os
 import pandas as pd
 
 
-def upload_sector_class(sector_class_file):
+def upload_sector_class(sector_class_file, overwrite):
     print('getting csv for processing...')
     df = pd.read_csv(sector_class_file, encoding='latin-1')
     df = df[['cluster_id','class', 'note','sector']]
@@ -41,15 +41,24 @@ def upload_sector_class(sector_class_file):
         "(cluster_id, class, note, sector) "
         "FROM STDIN CSV HEADER", csv_file)
     conn.commit()
-    
     print('updating processed_donors...')
-    c.execute("UPDATE processed_donors as p"
+    if overwrite != True:
+        
+        c.execute("UPDATE processed_donors as p"
             " SET class = CASE WHEN p.class IS NULL THEN t.class ELSE p.class END, "
             " note = CASE WHEN p.note IS NULL THEN t.note ELSE p.note END,"
             " sector = CASE WHEN p.sector IS NULL THEN t.sector ELSE p.sector END"
             " FROM tmp_d as t"
             " WHERE p.cluster_id = t.cluster_id ")
-    conn.commit()
+        conn.commit()
+    else:
+        c.execute("UPDATE processed_donors as p"
+            " SET class = t.class, "
+            " note = t.note, "
+            " sector = t.sector "
+            " FROM tmp_d as t"
+            " WHERE p.cluster_id = t.cluster_id ")
+        conn.commit()
     
     c.close()
     conn.close()
@@ -62,6 +71,7 @@ def finish():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='upload_sector_class')
     parser.add_argument('sector_class_file', help='file with billionaires and millionaires and sector')
+    parser.add_argument('overwrite', help='overwrite existing sector')
     args=parser.parse_args()
-    upload_sector_class(args.sector_class_file)
+    upload_sector_class(args.sector_class_file, args.overwrite)
     finish()

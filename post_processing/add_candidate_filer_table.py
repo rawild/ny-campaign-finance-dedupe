@@ -2,6 +2,7 @@ import dj_database_url
 import psycopg2
 import psycopg2.extras
 import argparse
+import csv
 
 
 def add_candidate_filer_mapping(candidate_filer_file):
@@ -22,15 +23,18 @@ def add_candidate_filer_mapping(candidate_filer_file):
     c = conn.cursor()
 
 
+    '''
     print('creating table...')
     c.execute("CREATE TABLE candidate_filer "
              "(candidate_id INTEGER, filer_id INTEGER)")
     conn.commit()
-
+    '''
     with open(candidate_filer_file, 'r+') as csv_file:
-        c.copy_expert("COPY candidate_filer "
-        "(candidate_id,filer_id) "
-        "FROM STDIN CSV HEADER", csv_file)
+        reader = csv.reader(csv_file)
+        next(reader)
+        for row in reader:
+            c.execute("INSERT INTO candidate_filer VALUES (%s, %s)", row)
+    
     conn.commit()
     
     

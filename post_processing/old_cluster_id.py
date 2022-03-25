@@ -1,5 +1,5 @@
 '''
-Utils for looking up old cluster_id to new one
+Utils for looking up old cluster_id to new one-- THIS IS FOR DATA DOWNLOADED BEFORE January 2021
 
 Usage:
 python3 old_cluster_id.py 'postgres://user:password@host/mydatabase' ../../carry_fwd/new_to_old_filer_id_map.csv ../../Cuomo_TTR_escalation/CuomoTopDonors_for_sector_upload.csv 
